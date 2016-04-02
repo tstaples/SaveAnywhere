@@ -6,6 +6,7 @@ using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.Menus;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
 namespace SaveAnywhere
@@ -69,8 +70,10 @@ namespace SaveAnywhere
 
         private void OnClickableMenuClosed(IClickableMenu priorMenu)
         {
+            pollForExitPage = false;
             isGameMenuOpen = false;
             isExitPageOpen = false;
+            UnsubscribeDrawEvent();
             ControlEvents.MouseChanged -= OnMouseChanged;
         }
 
@@ -107,6 +110,20 @@ namespace SaveAnywhere
             int h = Game1.tileSize * 3 / 2;
             saveButtonBounds = new Rectangle(x, y, w, h);
             var saveButton = new ClickableComponent(saveButtonBounds, "Save Game");
+
+            SubscribeDrawEvent();
+        }
+
+        private void OnDraw(object sender, EventArgs e)
+        {
+            SpriteBatch spriteBatch = Game1.spriteBatch;
+
+            float scale = (float)Game1.pixelZoom;
+            Rectangle tileSheetSourceRect = new Rectangle(432, 439, 9, 9);
+            IClickableMenu.drawTextureBox(spriteBatch, Game1.mouseCursors, tileSheetSourceRect, saveButtonBounds.X, saveButtonBounds.Y, saveButtonBounds.Width, saveButtonBounds.Height, Color.White, scale, true);
+
+            SVector2 tpos = new SVector2(saveButtonBounds.Center.X, saveButtonBounds.Center.Y + Game1.pixelZoom) - SVector2.MeasureString("Save Game", Game1.dialogueFont) / 2f;
+            Utility.drawTextWithShadow(spriteBatch, "Save Game", Game1.dialogueFont, tpos.ToXNAVector2(), Game1.textColor, 1f, -1f, -1, -1, 0f, 3);
         }
 
         // TODO: create/store backups of players saves first
@@ -121,6 +138,24 @@ namespace SaveAnywhere
                     Log.Debug("Finished saving");
                 }
             }
+        }
+
+        private void UnsubscribeDrawEvent()
+        {
+#if SMAPI_VERSION_39_3_AND_PRIOR
+            GraphicsEvents.DrawTick -= OnDraw;
+#else
+            GraphicsEvents.OnPostRenderEvent -= OnDraw;
+#endif
+        }
+
+        private void SubscribeDrawEvent()
+        {
+#if SMAPI_VERSION_39_3_AND_PRIOR
+            GraphicsEvents.DrawTick += OnDraw;
+#else
+            GraphicsEvents.OnPostRenderEvent += OnDraw;
+#endif
         }
     }
 }
