@@ -46,9 +46,9 @@ namespace SaveAnywhere
         {
             MenuEvents.MenuChanged += OnMenuChanged;
             GameEvents.UpdateTick += OnUpdateTick;
-            PlayerEvents.LoadedGame += OnLoadedGame;
+            GameEvents.UpdateTick += PollForGameLoaded;
             ControlEvents.KeyReleased += ControlEvents_KeyReleased;
-            
+            TimeEvents.OnNewDay += OnNewDay;
         }
 
         // Debug
@@ -70,8 +70,36 @@ namespace SaveAnywhere
             }
         }
 
-        private void OnLoadedGame(object sender, EventArgsLoadedGameChanged e)
+        private void OnNewDay(object sender, EventArgsNewDay e)
         {
+            // Delete our save file so that if the player exits after waking up
+            // then we won't accidently set the wrong info when they next load.
+            string saveFile = Path.Combine(savePath, "currentsave");
+            if (File.Exists(saveFile))
+            {
+                Log.Debug("Deleting custom save file");
+                File.Delete(saveFile);
+            }
+        }
+
+        private void OnLoadedGame()
+        {
+            Log.Debug("onLoadedGame: loading custom save data");
+            string saveFile = Path.Combine(savePath, "currentsave");
+            if (File.Exists(saveFile))
+            {
+                Load();
+            }
+        }
+
+        private void PollForGameLoaded(object sender, EventArgs e)
+        {
+            if (Game1.hasLoadedGame && Game1.gameMode == 3)
+            {
+                Log.Debug("Game loaded... running custom loader");
+                GameEvents.UpdateTick -= PollForGameLoaded;
+                OnLoadedGame();
+            }
         }
 
         // TODO: add gamepad support
@@ -168,33 +196,28 @@ namespace SaveAnywhere
         private void OnDraw(object sender, EventArgs e)
         {
             SpriteBatch spriteBatch = Game1.spriteBatch;
-            string text = Game1.player.Position.ToString();
-            Vector2 tsize = Game1.smallFont.MeasureString(text);
-            Vector2 pos = new Vector2(Game1.graphics.GraphicsDevice.Viewport.TitleSafeArea.X, Game1.graphics.GraphicsDevice.Viewport.TitleSafeArea.Y);
-            spriteBatch.DrawString(Game1.smallFont, text, pos, Color.Green);
-
             // TODO: fix button being on top of cursor
             // TODO: add < 39.3 draw compat
-            //float scale = Game1.pixelZoom;
-            //Rectangle tileSheetSourceRect = new Rectangle(432, 439, 9, 9);
-            //IClickableMenu.drawTextureBox(spriteBatch, Game1.mouseCursors, tileSheetSourceRect, saveButtonBounds.X, saveButtonBounds.Y, saveButtonBounds.Width, saveButtonBounds.Height, Color.White, scale, true);
+            float scale = Game1.pixelZoom;
+            Rectangle tileSheetSourceRect = new Rectangle(432, 439, 9, 9);
+            IClickableMenu.drawTextureBox(spriteBatch, Game1.mouseCursors, tileSheetSourceRect, saveButtonBounds.X, saveButtonBounds.Y, saveButtonBounds.Width, saveButtonBounds.Height, Color.White, scale, true);
 
-            //SVector2 tpos = new SVector2(saveButtonBounds.Center.X, saveButtonBounds.Center.Y + Game1.pixelZoom) - SVector2.MeasureString("Save Game", Game1.dialogueFont) / 2f;
-            //Utility.drawTextWithShadow(spriteBatch, "Save Game", Game1.dialogueFont, tpos.ToXNAVector2(), Game1.textColor, 1f, -1f, -1, -1, 0f, 3);
+            SVector2 tpos = new SVector2(saveButtonBounds.Center.X, saveButtonBounds.Center.Y + Game1.pixelZoom) - SVector2.MeasureString("Save Game", Game1.dialogueFont) / 2f;
+            Utility.drawTextWithShadow(spriteBatch, "Save Game", Game1.dialogueFont, tpos.ToXNAVector2(), Game1.textColor, 1f, -1f, -1, -1, 0f, 3);
         }
 
         // TODO: create/store backups of players saves first
         // and maybe store up to 5 backups or something
         private void Save()
         {
-            //IEnumerator<int> saveEnumerator = SaveGame.Save();
-            //while (saveEnumerator.MoveNext())
-            //{
-            //    if (saveEnumerator.Current == SaveCompleteFlag)
-            //    {
-            //        Log.Debug("Finished saving");
-            //    }
-            //}
+            IEnumerator<int> saveEnumerator = SaveGame.Save();
+            while (saveEnumerator.MoveNext())
+            {
+                if (saveEnumerator.Current == SaveCompleteFlag)
+                {
+                    Log.Debug("Finished saving");
+                }
+            }
 
             try
             {
@@ -267,6 +290,16 @@ namespace SaveAnywhere
 #else
             GraphicsEvents.OnPostRenderEvent += OnDraw;
 #endif
+        }
+
+        // Debug
+        private static void DrawPlayerPosition()
+        {
+            SpriteBatch spriteBatch = Game1.spriteBatch;
+            string text = Game1.player.Position.ToString();
+            Vector2 tsize = Game1.smallFont.MeasureString(text);
+            Vector2 pos = new Vector2(Game1.graphics.GraphicsDevice.Viewport.TitleSafeArea.X, Game1.graphics.GraphicsDevice.Viewport.TitleSafeArea.Y);
+            spriteBatch.DrawString(Game1.smallFont, text, pos, Color.Green);
         }
     }
 }
