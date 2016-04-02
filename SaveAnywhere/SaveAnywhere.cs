@@ -15,8 +15,20 @@ namespace SaveAnywhere
     {
         private const int SaveCompleteFlag = 100;
 
+        public enum GameMenuTab : int
+        {
+            Inventory = 0,
+            Skills = 1,
+            Social = 2,
+            Map = 3,
+            Crafting = 4,
+            Collections = 5,
+            Options = 6,
+            Exit = 7
+        }
+
+        private GameMenuTab previousTab = GameMenuTab.Inventory;
         private bool isGameMenuOpen = false;
-        private bool pollForExitPage = false;
         private bool isExitPageOpen = false;
         private Rectangle saveButtonBounds;
 
@@ -35,23 +47,10 @@ namespace SaveAnywhere
             if (e.NewState.LeftButton != ButtonState.Pressed)
                 return;
 
-                // Probably don't need to check if the menu is null since we wouldn't doing this check if it was
-            if (!isExitPageOpen && Game1.activeClickableMenu != null)
+            Debug.Assert(isExitPageOpen, "exit page should be open if we've reached this point");
+            if (saveButtonBounds.Contains(e.NewState.X, e.NewState.Y))
             {
-                GameMenu gameMenu = (GameMenu)Game1.activeClickableMenu;
-                // The tab won't switch until next update so set a flag to check next update
-                if (gameMenu.currentTab != GameMenu.exitTab && !pollForExitPage)
-                {
-                    pollForExitPage = true;
-                }
-            }
-            else
-            {
-                Debug.Assert(isExitPageOpen, "exit page should be open if we've reached this point");
-                if (saveButtonBounds.Contains(e.NewState.X, e.NewState.Y))
-                {
-                    Save();
-                }
+                Save();
             }
         }
 
@@ -64,43 +63,57 @@ namespace SaveAnywhere
             if (Utils.IsType<GameMenu>(e.NewMenu) && !isGameMenuOpen)
             {
                 isGameMenuOpen = true;
-                ControlEvents.MouseChanged += OnMouseChanged;
             }
         }
 
         private void OnClickableMenuClosed(IClickableMenu priorMenu)
         {
-            pollForExitPage = false;
             isGameMenuOpen = false;
             isExitPageOpen = false;
-            UnsubscribeDrawEvent();
-            ControlEvents.MouseChanged -= OnMouseChanged;
+
+            UnsubscribeEvents();
         }
 
         private void OnUpdateTick(object sender, EventArgs e)
         {
+            // Check for menu closed events
             if (!wasMenuClosedInvoked && previousMenu != null && Game1.activeClickableMenu == null)
             {
                 wasMenuClosedInvoked = true;
                 OnClickableMenuClosed(previousMenu);
             }
 
-            if (pollForExitPage)
+            if (isGameMenuOpen)
             {
                 GameMenu gameMenu = (GameMenu)Game1.activeClickableMenu;
-                if (gameMenu.currentTab == GameMenu.exitTab && !isExitPageOpen)
+                GameMenuTab currentTab = (GameMenuTab)gameMenu.currentTab;
+                if (previousTab != currentTab)
                 {
-                    isExitPageOpen = true;
-                    pollForExitPage = false;
-                    OnExitPageOpened(gameMenu);
+                    OnGameMenuTabChanged(previousTab, currentTab);
+                    previousTab = currentTab;
                 }
             }
         }
 
-        private void OnExitPageOpened(GameMenu gameMenu)
+        private void OnGameMenuTabChanged(GameMenuTab prevTab, GameMenuTab newTab)
+        {
+            if (newTab == GameMenuTab.Exit && !isExitPageOpen)
+            {
+                isExitPageOpen = true;
+                OnExitPageOpened();
+            }
+            else
+            {
+                isExitPageOpen = false;
+                OnExitPageClosed();
+            }
+        }
+
+        private void OnExitPageOpened()
         {
             Log.Debug("Exit tab clicked");
 
+            GameMenu gameMenu = (GameMenu)Game1.activeClickableMenu;
             var pages = Utils.GetNativeField<List<IClickableMenu>, GameMenu>(gameMenu, "pages");
             ExitPage exitPage = (ExitPage)pages[gameMenu.currentTab];
 
@@ -111,14 +124,19 @@ namespace SaveAnywhere
             saveButtonBounds = new Rectangle(x, y, w, h);
             var saveButton = new ClickableComponent(saveButtonBounds, "Save Game");
 
-            SubscribeDrawEvent();
+            SubscribeEvents();
+        }
+
+        private void OnExitPageClosed()
+        {
+            UnsubscribeEvents();
         }
 
         private void OnDraw(object sender, EventArgs e)
         {
             SpriteBatch spriteBatch = Game1.spriteBatch;
 
-            float scale = (float)Game1.pixelZoom;
+            float scale = Game1.pixelZoom;
             Rectangle tileSheetSourceRect = new Rectangle(432, 439, 9, 9);
             IClickableMenu.drawTextureBox(spriteBatch, Game1.mouseCursors, tileSheetSourceRect, saveButtonBounds.X, saveButtonBounds.Y, saveButtonBounds.Width, saveButtonBounds.Height, Color.White, scale, true);
 
@@ -140,8 +158,10 @@ namespace SaveAnywhere
             }
         }
 
-        private void UnsubscribeDrawEvent()
+        private void UnsubscribeEvents()
         {
+            ControlEvents.MouseChanged -= OnMouseChanged;
+
 #if SMAPI_VERSION_39_3_AND_PRIOR
             GraphicsEvents.DrawTick -= OnDraw;
 #else
@@ -149,8 +169,10 @@ namespace SaveAnywhere
 #endif
         }
 
-        private void SubscribeDrawEvent()
+        private void SubscribeEvents()
         {
+            ControlEvents.MouseChanged += OnMouseChanged;
+
 #if SMAPI_VERSION_39_3_AND_PRIOR
             GraphicsEvents.DrawTick += OnDraw;
 #else
