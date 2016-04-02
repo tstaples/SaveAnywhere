@@ -234,6 +234,7 @@ namespace SaveAnywhere
                 saveData.playerData.facingDirection = Game1.player.facingDirection;
                 saveData.playerData.stamina = Game1.player.stamina;
                 saveData.playerData.health = Game1.player.health;
+                saveData.playerData.swimming = Game1.player.swimming;
                 formatter.Serialize(stream, saveData);
 
                 FileStream fileStream = File.Create(saveFile);
@@ -263,6 +264,7 @@ namespace SaveAnywhere
                 Game1.player.faceDirection(saveData.playerData.facingDirection);
                 Game1.player.stamina = saveData.playerData.stamina;
                 Game1.player.health = saveData.playerData.health;
+                Game1.player.swimming = saveData.playerData.swimming;
             }
             catch (Exception e)
             {
