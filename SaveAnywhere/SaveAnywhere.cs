@@ -1,4 +1,9 @@
 ﻿using System;
+using System.IO;
+using System.Reflection;
+using System.Xml.Serialization;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Diagnostics;
 using System.Collections.Generic;
 using StardewModdingAPI;
@@ -35,10 +40,38 @@ namespace SaveAnywhere
         private IClickableMenu previousMenu = null;
         private bool wasMenuClosedInvoked = false;
 
+        string savePath = Path.Combine(Constants.DataPath, "Mods", "SaveAnywhere");
+
         public override void Entry(params object[] objects)
         {
             MenuEvents.MenuChanged += OnMenuChanged;
             GameEvents.UpdateTick += OnUpdateTick;
+            PlayerEvents.LoadedGame += OnLoadedGame;
+            ControlEvents.KeyReleased += ControlEvents_KeyReleased;
+            
+        }
+
+        // Debug
+        private void ControlEvents_KeyReleased(object sender, EventArgsKeyPressed e)
+        {
+            if (e.KeyPressed == Keys.K)
+            {
+                Log.Debug("loading");
+                Load();
+            }
+            else if (e.KeyPressed == Keys.J)
+            {
+                Log.Debug("saving");
+                Save();
+            }
+            else if (e.KeyPressed == Keys.N)
+            {
+                GraphicsEvents.OnPostRenderEvent += OnDraw;
+            }
+        }
+
+        private void OnLoadedGame(object sender, EventArgsLoadedGameChanged e)
+        {
         }
 
         // TODO: add gamepad support
@@ -135,26 +168,82 @@ namespace SaveAnywhere
         private void OnDraw(object sender, EventArgs e)
         {
             SpriteBatch spriteBatch = Game1.spriteBatch;
+            string text = Game1.player.Position.ToString();
+            Vector2 tsize = Game1.smallFont.MeasureString(text);
+            Vector2 pos = new Vector2(Game1.graphics.GraphicsDevice.Viewport.TitleSafeArea.X, Game1.graphics.GraphicsDevice.Viewport.TitleSafeArea.Y);
+            spriteBatch.DrawString(Game1.smallFont, text, pos, Color.Green);
 
-            float scale = Game1.pixelZoom;
-            Rectangle tileSheetSourceRect = new Rectangle(432, 439, 9, 9);
-            IClickableMenu.drawTextureBox(spriteBatch, Game1.mouseCursors, tileSheetSourceRect, saveButtonBounds.X, saveButtonBounds.Y, saveButtonBounds.Width, saveButtonBounds.Height, Color.White, scale, true);
+            // TODO: fix button being on top of cursor
+            // TODO: add < 39.3 draw compat
+            //float scale = Game1.pixelZoom;
+            //Rectangle tileSheetSourceRect = new Rectangle(432, 439, 9, 9);
+            //IClickableMenu.drawTextureBox(spriteBatch, Game1.mouseCursors, tileSheetSourceRect, saveButtonBounds.X, saveButtonBounds.Y, saveButtonBounds.Width, saveButtonBounds.Height, Color.White, scale, true);
 
-            SVector2 tpos = new SVector2(saveButtonBounds.Center.X, saveButtonBounds.Center.Y + Game1.pixelZoom) - SVector2.MeasureString("Save Game", Game1.dialogueFont) / 2f;
-            Utility.drawTextWithShadow(spriteBatch, "Save Game", Game1.dialogueFont, tpos.ToXNAVector2(), Game1.textColor, 1f, -1f, -1, -1, 0f, 3);
+            //SVector2 tpos = new SVector2(saveButtonBounds.Center.X, saveButtonBounds.Center.Y + Game1.pixelZoom) - SVector2.MeasureString("Save Game", Game1.dialogueFont) / 2f;
+            //Utility.drawTextWithShadow(spriteBatch, "Save Game", Game1.dialogueFont, tpos.ToXNAVector2(), Game1.textColor, 1f, -1f, -1, -1, 0f, 3);
         }
 
         // TODO: create/store backups of players saves first
         // and maybe store up to 5 backups or something
         private void Save()
         {
-            IEnumerator<int> saveEnumerator = SaveGame.Save();
-            while (saveEnumerator.MoveNext())
+            //IEnumerator<int> saveEnumerator = SaveGame.Save();
+            //while (saveEnumerator.MoveNext())
+            //{
+            //    if (saveEnumerator.Current == SaveCompleteFlag)
+            //    {
+            //        Log.Debug("Finished saving");
+            //    }
+            //}
+
+            try
             {
-                if (saveEnumerator.Current == SaveCompleteFlag)
-                {
-                    Log.Debug("Finished saving");
-                }
+                string saveFile = Path.Combine(savePath, "currentsave");
+                Directory.CreateDirectory(savePath);
+
+                MemoryStream stream = new MemoryStream();
+                BinaryFormatter formatter = new BinaryFormatter();
+
+                SaveData saveData = new SaveData();
+                saveData.gameData.timeOfDay = Game1.timeOfDay;
+                saveData.playerData.currentLocation = Game1.currentLocation.Name;
+                saveData.playerData.position = Game1.player.position;
+                saveData.playerData.facingDirection = Game1.player.facingDirection;
+                saveData.playerData.stamina = Game1.player.stamina;
+                saveData.playerData.health = Game1.player.health;
+                formatter.Serialize(stream, saveData);
+
+                FileStream fileStream = File.Create(saveFile);
+                fileStream.Write(stream.ToArray(), 0, (int)stream.Length);
+                fileStream.Close();
+            }
+            catch(Exception ex)
+            {
+                Log.Error("Error saving data: " + ex);
+            }
+        }
+
+        private void Load()
+        {
+            try
+            {
+                string saveFile = Path.Combine(savePath, "currentsave");
+                FileStream filestream = new FileStream(saveFile, FileMode.Open);
+                BinaryFormatter formatter = new BinaryFormatter();
+
+                SaveData saveData = (SaveData)formatter.Deserialize(filestream);
+                filestream.Close();
+
+                Game1.timeOfDay = saveData.gameData.timeOfDay;
+                Vector2 pos = saveData.playerData.position;
+                Game1.warpFarmer(saveData.playerData.currentLocation, (int)(pos.X / Game1.tileSize), (int)(pos.Y / Game1.tileSize), false);
+                Game1.player.faceDirection(saveData.playerData.facingDirection);
+                Game1.player.stamina = saveData.playerData.stamina;
+                Game1.player.health = saveData.playerData.health;
+            }
+            catch (Exception e)
+            {
+                Log.Error("Failed to load data: " + e);
             }
         }
 
