@@ -17,12 +17,22 @@ namespace SaveAnywhere
     public class SaveManager
     {
         private static readonly int SaveCompleteFlag = 100;
-        private static readonly string savePath = Path.Combine(Constants.DataPath, "Mods", "SaveAnywhere");
+        private static readonly string rootSavePath = Path.Combine(Constants.DataPath, "Mods", "SaveAnywhere");
 
+        private string currentSaveFileName;
+        private string currentSaveFileDir;
+        private string currentSaveFilePath;
+
+        public SaveManager()
+        {
+            currentSaveFileName = Game1.player.name + "_" + Game1.uniqueIDForThisGame;
+            currentSaveFileDir = Path.Combine(rootSavePath, currentSaveFileName);
+            currentSaveFilePath = Path.Combine(currentSaveFileDir, currentSaveFileName);
+        }
 
         // TODO: create/store backups of players saves first
         // and maybe store up to 5 backups or something
-        public static void Save()
+        public void Save()
         {
             IEnumerator<int> saveEnumerator = SaveGame.Save();
             while (saveEnumerator.MoveNext())
@@ -35,12 +45,12 @@ namespace SaveAnywhere
 
             try
             {
-                string saveFile = Path.Combine(savePath, "currentsave");
-                Directory.CreateDirectory(savePath);
+                // Create the save directory for this user if it doesn't exist
+                Directory.CreateDirectory(currentSaveFileDir);
 
                 IMessage message = PopulateMessage(SaveData.Game1.Descriptor, Game1.game1);
 
-                using (var output = File.Create(saveFile))
+                using (var output = File.Create(currentSaveFilePath))
                 {
                     message.WriteTo(output);
                 }
@@ -51,19 +61,18 @@ namespace SaveAnywhere
             }
         }
 
-        public static void Load()
+        public void Load()
         {
             try
             {
-                string saveFile = Path.Combine(savePath, "currentsave");
-                if (!File.Exists(saveFile))
+                if (!File.Exists(currentSaveFilePath))
                 {
                     Log.Info("No save file found");
                     return;
                 }
 
                 SaveData.Game1 game;
-                using (var input = File.OpenRead(saveFile))
+                using (var input = File.OpenRead(currentSaveFilePath))
                 {
                     game = SaveData.Game1.Parser.ParseFrom(input);
                 }
@@ -84,19 +93,18 @@ namespace SaveAnywhere
             }
         }
 
-        public static void ClearSave()
+        public void ClearSave()
         {
             // Delete our save file so that if the player exits after waking up
             // then we won't accidently set the wrong info when they next load.
-            string saveFile = Path.Combine(savePath, "currentsave");
-            if (File.Exists(saveFile))
+            if (File.Exists(currentSaveFilePath))
             {
                 Log.Debug("Deleting custom save file");
-                File.Delete(saveFile);
+                File.Delete(currentSaveFilePath);
             }
         }
 
-        private static IMessage PopulateMessage(MessageDescriptor descriptor, object instance)
+        private IMessage PopulateMessage(MessageDescriptor descriptor, object instance)
         {
             // Create an instance of the message
             IMessage message = (IMessage)Activator.CreateInstance(descriptor.ClrType);
@@ -133,7 +141,7 @@ namespace SaveAnywhere
         }
 
         // TODO: think of a better name
-        private static void DePopulateMessage(IMessage message, object instance)
+        private void DePopulateMessage(IMessage message, object instance)
         {
             foreach (var field in message.Descriptor.Fields.InDeclarationOrder())
             {
@@ -149,6 +157,10 @@ namespace SaveAnywhere
                 }
             }
         }
+
+
+
+        
 
         private static T CheckProtoFieldNotNull<T>(T value, FieldDescriptor descriptor)
         {

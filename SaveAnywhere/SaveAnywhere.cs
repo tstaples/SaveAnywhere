@@ -40,6 +40,7 @@ namespace SaveAnywhere
         private IClickableMenu previousMenu = null;
         private bool wasMenuClosedInvoked = false;
 
+        private SaveManager saveManager;
 
         public override void Entry(params object[] objects)
         {
@@ -56,12 +57,12 @@ namespace SaveAnywhere
             if (e.KeyPressed == Keys.K)
             {
                 Log.Debug("loading");
-                SaveManager.Load();
+                saveManager.Load();
             }
             else if (e.KeyPressed == Keys.J)
             {
                 Log.Debug("saving");
-                SaveManager.Save();
+                saveManager.Save();
             }
             else if (e.KeyPressed == Keys.N)
             {
@@ -71,12 +72,7 @@ namespace SaveAnywhere
 
         private void OnNewDay(object sender, EventArgsNewDay e)
         {
-            SaveManager.ClearSave();
-        }
-
-        private void OnLoadedGame()
-        {
-            SaveManager.Load();
+            saveManager.ClearSave();
         }
 
         private void PollForGameLoaded(object sender, EventArgs e)
@@ -85,7 +81,9 @@ namespace SaveAnywhere
             {
                 Log.Debug("Game loaded... running custom loader");
                 GameEvents.UpdateTick -= PollForGameLoaded;
-                OnLoadedGame();
+
+                saveManager = new SaveManager();
+                saveManager.Load();
             }
         }
 
@@ -98,7 +96,7 @@ namespace SaveAnywhere
             Debug.Assert(isExitPageOpen, "exit page should be open if we've reached this point");
             if (saveButtonBounds.Contains(e.NewState.X, e.NewState.Y))
             {
-                SaveManager.Save();
+                saveManager.Save();
             }
         }
 
