@@ -57,7 +57,7 @@
     <Compile Include="GeneratedProtoFiles\Game.cs" />
     <Compile Include="SaveAnywhere.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SaveData.cs" />
+    <Compile Include="SaveManager.cs" />
     <Compile Include="SVector2.cs" />
     <Compile Include="Utils.cs" />
   </ItemGroup>
