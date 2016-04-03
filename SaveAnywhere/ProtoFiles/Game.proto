@@ -8,6 +8,17 @@ message GameLocation {
 	// TODO: Events and other needed data
 }
 
+message Buff {
+	int32 millisecondsDuration = 1;
+	string description = 2;
+	string source = 3;
+	int32 total = 4;
+	int32 sheetIndex = 5;
+	int32 which = 6;
+	Color glow = 7;
+	repeated int32 buffAttributes = 12 [packed=true];
+}
+
 // Player data
 message Farmer {
     Vector2 position = 1;
@@ -16,6 +27,8 @@ message Farmer {
     float stamina = 4;
     int32 health = 5;
     bool swimming = 6;
+
+	repeated Buff buffs = 25;
 }
 
 // Main object containing all save data

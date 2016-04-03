@@ -6,3 +6,7 @@ message Vector2 {
 	float x = 1;
 	float y = 2;
 }
+
+message Color {
+	uint32 packedValue = 1;
+}

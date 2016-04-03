@@ -24,11 +24,13 @@ namespace SaveAnywhere.SaveData {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
             "CgxDb21tb24ucHJvdG8iHwoHVmVjdG9yMhIJCgF4GAEgASgCEgkKAXkYAiAB",
-            "KAJCGKoCFVNhdmVBbnl3aGVyZS5TYXZlRGF0YWIGcHJvdG8z"));
+            "KAIiHAoFQ29sb3ISEwoLcGFja2VkVmFsdWUYASABKA1CGKoCFVNhdmVBbnl3",
+            "aGVyZS5TYXZlRGF0YWIGcHJvdG8z"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedCodeInfo(null, new pbr::GeneratedCodeInfo[] {
-            new pbr::GeneratedCodeInfo(typeof(global::SaveAnywhere.SaveData.Vector2), global::SaveAnywhere.SaveData.Vector2.Parser, new[]{ "X", "Y" }, null, null, null)
+            new pbr::GeneratedCodeInfo(typeof(global::SaveAnywhere.SaveData.Vector2), global::SaveAnywhere.SaveData.Vector2.Parser, new[]{ "X", "Y" }, null, null, null),
+            new pbr::GeneratedCodeInfo(typeof(global::SaveAnywhere.SaveData.Color), global::SaveAnywhere.SaveData.Color.Parser, new[]{ "PackedValue" }, null, null, null)
           }));
     }
     #endregion
@@ -157,6 +159,109 @@ namespace SaveAnywhere.SaveData {
           }
           case 21: {
             Y = input.ReadFloat();
+            break;
+          }
+        }
+      }
+    }
+
+  }
+
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class Color : pb::IMessage<Color> {
+    private static readonly pb::MessageParser<Color> _parser = new pb::MessageParser<Color>(() => new Color());
+    public static pb::MessageParser<Color> Parser { get { return _parser; } }
+
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::SaveAnywhere.SaveData.CommonReflection.Descriptor.MessageTypes[1]; }
+    }
+
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    public Color() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    public Color(Color other) : this() {
+      packedValue_ = other.packedValue_;
+    }
+
+    public Color Clone() {
+      return new Color(this);
+    }
+
+    /// <summary>Field number for the "packedValue" field.</summary>
+    public const int PackedValueFieldNumber = 1;
+    private uint packedValue_;
+    public uint PackedValue {
+      get { return packedValue_; }
+      set {
+        packedValue_ = value;
+      }
+    }
+
+    public override bool Equals(object other) {
+      return Equals(other as Color);
+    }
+
+    public bool Equals(Color other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (PackedValue != other.PackedValue) return false;
+      return true;
+    }
+
+    public override int GetHashCode() {
+      int hash = 1;
+      if (PackedValue != 0) hash ^= PackedValue.GetHashCode();
+      return hash;
+    }
+
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    public void WriteTo(pb::CodedOutputStream output) {
+      if (PackedValue != 0) {
+        output.WriteRawTag(8);
+        output.WriteUInt32(PackedValue);
+      }
+    }
+
+    public int CalculateSize() {
+      int size = 0;
+      if (PackedValue != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeUInt32Size(PackedValue);
+      }
+      return size;
+    }
+
+    public void MergeFrom(Color other) {
+      if (other == null) {
+        return;
+      }
+      if (other.PackedValue != 0) {
+        PackedValue = other.PackedValue;
+      }
+    }
+
+    public void MergeFrom(pb::CodedInputStream input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            input.SkipLastField();
+            break;
+          case 8: {
+            PackedValue = input.ReadUInt32();
             break;
           }
         }

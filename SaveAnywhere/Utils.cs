@@ -74,6 +74,28 @@ namespace SaveAnywhere
             return false;
         }
 
+        public static bool IsEnumerableOfType(object o, Type t)
+        {
+            return (IsEnurmerableType(o.GetType()) &&
+                    o.GetType().GetTypeInfo().GenericTypeArguments[0] == t);
+        }
+
+        public static bool IsCollectionOfType(object o, Type t)
+        {
+            return (IsCollectionType(o.GetType()) &&
+                    o.GetType().GetTypeInfo().GenericTypeArguments[0] == t);
+        }
+
+        public static bool IsEnurmerableType(Type type)
+        {
+            return (type.GetInterface("IEnumerable") != null);
+        }
+
+        public static bool IsCollectionType(Type type)
+        {
+            return (type.GetInterface("ICollection") != null);
+        }
+
         public static int GetTileSheetIndexFromID(int id)
         {
             if (id == 0)

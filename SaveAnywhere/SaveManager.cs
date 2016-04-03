@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Xml.Serialization;
@@ -130,6 +131,25 @@ namespace SaveAnywhere
                 // We might be able to get away with this, but there may be cases were it is supposed to be null (ie. thing hasn't spawned)
                 object value = CheckProtoFieldNotNull(GetFieldData(field.Name, instance), field);
 
+                if (field.IsRepeated)
+                {
+                    // We only have the type itself, not the type of collection.
+                    // It's pretty unlikely we'll find a collection of the same type with the same name (i hope).
+                    if (Utils.IsEnumerableOfType(value, field.GetType()))
+                    {
+                        //field.add
+                        foreach (var item in (IEnumerable)value)
+                        {
+                            // assign the values to our field if i can figure out how to get the field as repeated.
+                            // or we might be able to just write to it
+                        }
+                    }
+                    else
+                    {
+                        // do something since if we don't find it we're kinda fooked
+                    }
+                }
+
                 // We can only assign native types at the moment. This means any
                 // complex ones must have a proto message representation so we can
                 // recursively resolve it and assign the value.
@@ -139,18 +159,17 @@ namespace SaveAnywhere
                     // and run this on it's instance, eventually giving us the correct value.
                     IMessage fieldMessage = PopulateMessage(field.MessageType, value);
                     field.Accessor.SetValue(message, fieldMessage);
+                    continue;
                 }
-                else
+
+                //object value = GetFieldData(field.Name, instance);
+                if (value == null)
                 {
-                    //object value = GetFieldData(field.Name, instance);
-                    if (value == null)
-                    {
-                        // For now we'll just leave it as it's default value, but still report it
-                        Log.Error("[SaveAnywhere] Value for " + field.Name + " is null; setting to default.");
-                        continue;
-                    }
-                    field.Accessor.SetValue(message, value);
+                    // For now we'll just leave it as it's default value, but still report it
+                    Log.Error("[SaveAnywhere] Value for " + field.Name + " is null; setting to default.");
+                    continue;
                 }
+                field.Accessor.SetValue(message, value);
             }
             return message;
         }
@@ -253,22 +272,51 @@ namespace SaveAnywhere
                 .Where(n => n != null)
                 .Distinct();
         }
+        
+        private static List<FieldInfo> FilterFieldsByType(Type type, FieldInfo[] fields)
+        {
+            var fieldsOfType = new List<FieldInfo>();
+            foreach (var field in fields)
+            {
+                if (field.FieldType == type)
+                {
+                    fieldsOfType.Add(field);
+                }
+            }
+            return fieldsOfType;
+        }
+
+        private static FieldInfo GetField(string fieldName, Type type, object instance)
+        {
+            var filteredFields = FilterFieldsByType(type, instance.GetType().GetFields(GetBindingFlags()));
+            foreach (var f in filteredFields)
+            {
+                if (f.Name == fieldName)
+                {
+                    return f;
+                }
+            }
+            return null;
+        }
 
         private static FieldInfo GetField(string fieldName, object instance)
         {
-            return instance.GetType().GetField(fieldName,
-                  BindingFlags.IgnoreCase
-                | BindingFlags.Instance
-                | BindingFlags.NonPublic
-                | BindingFlags.Public
-                | BindingFlags.Static
-                | BindingFlags.FlattenHierarchy
-                );
+            return instance.GetType().GetField(fieldName, GetBindingFlags());
         }
 
         private static object GetFieldData(string fieldName, object instance)
         {
             return GetField(fieldName, instance)?.GetValue(instance);
+        }
+
+        private static BindingFlags GetBindingFlags()
+        {
+            return BindingFlags.IgnoreCase
+            | BindingFlags.Instance
+            | BindingFlags.NonPublic
+            | BindingFlags.Public
+            | BindingFlags.Static
+            | BindingFlags.FlattenHierarchy;
         }
 
         private static void SetFieldData(string fieldName, object instance, object value)

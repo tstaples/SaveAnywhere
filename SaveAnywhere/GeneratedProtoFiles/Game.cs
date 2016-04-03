@@ -24,17 +24,23 @@ namespace SaveAnywhere.SaveData {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
             "CgpHYW1lLnByb3RvGgxDb21tb24ucHJvdG8iHAoMR2FtZUxvY2F0aW9uEgwK",
-            "BG5hbWUYASABKAkimAEKBkZhcm1lchIaCghwb3NpdGlvbhgBIAEoCzIILlZl",
-            "Y3RvcjISJgoPY3VycmVudExvY2F0aW9uGAIgASgLMg0uR2FtZUxvY2F0aW9u",
-            "EhcKD2ZhY2luZ0RpcmVjdGlvbhgDIAEoBRIPCgdzdGFtaW5hGAQgASgCEg4K",
-            "BmhlYWx0aBgFIAEoBRIQCghzd2ltbWluZxgGIAEoCCIzCgVHYW1lMRIRCgl0",
-            "aW1lT2ZEYXkYASABKAUSFwoGcGxheWVyGAIgASgLMgcuRmFybWVyQhiqAhVT",
-            "YXZlQW55d2hlcmUuU2F2ZURhdGFiBnByb3RvMw=="));
+            "BG5hbWUYASABKAkirQEKBEJ1ZmYSHAoUbWlsbGlzZWNvbmRzRHVyYXRpb24Y",
+            "ASABKAUSEwoLZGVzY3JpcHRpb24YAiABKAkSDgoGc291cmNlGAMgASgJEg0K",
+            "BXRvdGFsGAQgASgFEhIKCnNoZWV0SW5kZXgYBSABKAUSDQoFd2hpY2gYBiAB",
+            "KAUSFAoEZ2xvdxgHIAEoCzIGLkNvbG9yEhoKDmJ1ZmZBdHRyaWJ1dGVzGAwg",
+            "AygFQgIQASKuAQoGRmFybWVyEhoKCHBvc2l0aW9uGAEgASgLMgguVmVjdG9y",
+            "MhImCg9jdXJyZW50TG9jYXRpb24YAiABKAsyDS5HYW1lTG9jYXRpb24SFwoP",
+            "ZmFjaW5nRGlyZWN0aW9uGAMgASgFEg8KB3N0YW1pbmEYBCABKAISDgoGaGVh",
+            "bHRoGAUgASgFEhAKCHN3aW1taW5nGAYgASgIEhQKBWJ1ZmZzGBkgAygLMgUu",
+            "QnVmZiIzCgVHYW1lMRIRCgl0aW1lT2ZEYXkYASABKAUSFwoGcGxheWVyGAIg",
+            "ASgLMgcuRmFybWVyQhiqAhVTYXZlQW55d2hlcmUuU2F2ZURhdGFiBnByb3Rv",
+            "Mw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::SaveAnywhere.SaveData.CommonReflection.Descriptor, },
           new pbr::GeneratedCodeInfo(null, new pbr::GeneratedCodeInfo[] {
             new pbr::GeneratedCodeInfo(typeof(global::SaveAnywhere.SaveData.GameLocation), global::SaveAnywhere.SaveData.GameLocation.Parser, new[]{ "Name" }, null, null, null),
-            new pbr::GeneratedCodeInfo(typeof(global::SaveAnywhere.SaveData.Farmer), global::SaveAnywhere.SaveData.Farmer.Parser, new[]{ "Position", "CurrentLocation", "FacingDirection", "Stamina", "Health", "Swimming" }, null, null, null),
+            new pbr::GeneratedCodeInfo(typeof(global::SaveAnywhere.SaveData.Buff), global::SaveAnywhere.SaveData.Buff.Parser, new[]{ "MillisecondsDuration", "Description", "Source", "Total", "SheetIndex", "Which", "Glow", "BuffAttributes" }, null, null, null),
+            new pbr::GeneratedCodeInfo(typeof(global::SaveAnywhere.SaveData.Farmer), global::SaveAnywhere.SaveData.Farmer.Parser, new[]{ "Position", "CurrentLocation", "FacingDirection", "Stamina", "Health", "Swimming", "Buffs" }, null, null, null),
             new pbr::GeneratedCodeInfo(typeof(global::SaveAnywhere.SaveData.Game1), global::SaveAnywhere.SaveData.Game1.Parser, new[]{ "TimeOfDay", "Player" }, null, null, null)
           }));
     }
@@ -148,6 +154,297 @@ namespace SaveAnywhere.SaveData {
 
   }
 
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class Buff : pb::IMessage<Buff> {
+    private static readonly pb::MessageParser<Buff> _parser = new pb::MessageParser<Buff>(() => new Buff());
+    public static pb::MessageParser<Buff> Parser { get { return _parser; } }
+
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::SaveAnywhere.SaveData.GameReflection.Descriptor.MessageTypes[1]; }
+    }
+
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    public Buff() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    public Buff(Buff other) : this() {
+      millisecondsDuration_ = other.millisecondsDuration_;
+      description_ = other.description_;
+      source_ = other.source_;
+      total_ = other.total_;
+      sheetIndex_ = other.sheetIndex_;
+      which_ = other.which_;
+      Glow = other.glow_ != null ? other.Glow.Clone() : null;
+      buffAttributes_ = other.buffAttributes_.Clone();
+    }
+
+    public Buff Clone() {
+      return new Buff(this);
+    }
+
+    /// <summary>Field number for the "millisecondsDuration" field.</summary>
+    public const int MillisecondsDurationFieldNumber = 1;
+    private int millisecondsDuration_;
+    public int MillisecondsDuration {
+      get { return millisecondsDuration_; }
+      set {
+        millisecondsDuration_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "description" field.</summary>
+    public const int DescriptionFieldNumber = 2;
+    private string description_ = "";
+    public string Description {
+      get { return description_; }
+      set {
+        description_ = pb::Preconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "source" field.</summary>
+    public const int SourceFieldNumber = 3;
+    private string source_ = "";
+    public string Source {
+      get { return source_; }
+      set {
+        source_ = pb::Preconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "total" field.</summary>
+    public const int TotalFieldNumber = 4;
+    private int total_;
+    public int Total {
+      get { return total_; }
+      set {
+        total_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "sheetIndex" field.</summary>
+    public const int SheetIndexFieldNumber = 5;
+    private int sheetIndex_;
+    public int SheetIndex {
+      get { return sheetIndex_; }
+      set {
+        sheetIndex_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "which" field.</summary>
+    public const int WhichFieldNumber = 6;
+    private int which_;
+    public int Which {
+      get { return which_; }
+      set {
+        which_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "glow" field.</summary>
+    public const int GlowFieldNumber = 7;
+    private global::SaveAnywhere.SaveData.Color glow_;
+    public global::SaveAnywhere.SaveData.Color Glow {
+      get { return glow_; }
+      set {
+        glow_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "buffAttributes" field.</summary>
+    public const int BuffAttributesFieldNumber = 12;
+    private static readonly pb::FieldCodec<int> _repeated_buffAttributes_codec
+        = pb::FieldCodec.ForInt32(98);
+    private readonly pbc::RepeatedField<int> buffAttributes_ = new pbc::RepeatedField<int>();
+    public pbc::RepeatedField<int> BuffAttributes {
+      get { return buffAttributes_; }
+    }
+
+    public override bool Equals(object other) {
+      return Equals(other as Buff);
+    }
+
+    public bool Equals(Buff other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (MillisecondsDuration != other.MillisecondsDuration) return false;
+      if (Description != other.Description) return false;
+      if (Source != other.Source) return false;
+      if (Total != other.Total) return false;
+      if (SheetIndex != other.SheetIndex) return false;
+      if (Which != other.Which) return false;
+      if (!object.Equals(Glow, other.Glow)) return false;
+      if(!buffAttributes_.Equals(other.buffAttributes_)) return false;
+      return true;
+    }
+
+    public override int GetHashCode() {
+      int hash = 1;
+      if (MillisecondsDuration != 0) hash ^= MillisecondsDuration.GetHashCode();
+      if (Description.Length != 0) hash ^= Description.GetHashCode();
+      if (Source.Length != 0) hash ^= Source.GetHashCode();
+      if (Total != 0) hash ^= Total.GetHashCode();
+      if (SheetIndex != 0) hash ^= SheetIndex.GetHashCode();
+      if (Which != 0) hash ^= Which.GetHashCode();
+      if (glow_ != null) hash ^= Glow.GetHashCode();
+      hash ^= buffAttributes_.GetHashCode();
+      return hash;
+    }
+
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    public void WriteTo(pb::CodedOutputStream output) {
+      if (MillisecondsDuration != 0) {
+        output.WriteRawTag(8);
+        output.WriteInt32(MillisecondsDuration);
+      }
+      if (Description.Length != 0) {
+        output.WriteRawTag(18);
+        output.WriteString(Description);
+      }
+      if (Source.Length != 0) {
+        output.WriteRawTag(26);
+        output.WriteString(Source);
+      }
+      if (Total != 0) {
+        output.WriteRawTag(32);
+        output.WriteInt32(Total);
+      }
+      if (SheetIndex != 0) {
+        output.WriteRawTag(40);
+        output.WriteInt32(SheetIndex);
+      }
+      if (Which != 0) {
+        output.WriteRawTag(48);
+        output.WriteInt32(Which);
+      }
+      if (glow_ != null) {
+        output.WriteRawTag(58);
+        output.WriteMessage(Glow);
+      }
+      buffAttributes_.WriteTo(output, _repeated_buffAttributes_codec);
+    }
+
+    public int CalculateSize() {
+      int size = 0;
+      if (MillisecondsDuration != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(MillisecondsDuration);
+      }
+      if (Description.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(Description);
+      }
+      if (Source.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(Source);
+      }
+      if (Total != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(Total);
+      }
+      if (SheetIndex != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(SheetIndex);
+      }
+      if (Which != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(Which);
+      }
+      if (glow_ != null) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Glow);
+      }
+      size += buffAttributes_.CalculateSize(_repeated_buffAttributes_codec);
+      return size;
+    }
+
+    public void MergeFrom(Buff other) {
+      if (other == null) {
+        return;
+      }
+      if (other.MillisecondsDuration != 0) {
+        MillisecondsDuration = other.MillisecondsDuration;
+      }
+      if (other.Description.Length != 0) {
+        Description = other.Description;
+      }
+      if (other.Source.Length != 0) {
+        Source = other.Source;
+      }
+      if (other.Total != 0) {
+        Total = other.Total;
+      }
+      if (other.SheetIndex != 0) {
+        SheetIndex = other.SheetIndex;
+      }
+      if (other.Which != 0) {
+        Which = other.Which;
+      }
+      if (other.glow_ != null) {
+        if (glow_ == null) {
+          glow_ = new global::SaveAnywhere.SaveData.Color();
+        }
+        Glow.MergeFrom(other.Glow);
+      }
+      buffAttributes_.Add(other.buffAttributes_);
+    }
+
+    public void MergeFrom(pb::CodedInputStream input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            input.SkipLastField();
+            break;
+          case 8: {
+            MillisecondsDuration = input.ReadInt32();
+            break;
+          }
+          case 18: {
+            Description = input.ReadString();
+            break;
+          }
+          case 26: {
+            Source = input.ReadString();
+            break;
+          }
+          case 32: {
+            Total = input.ReadInt32();
+            break;
+          }
+          case 40: {
+            SheetIndex = input.ReadInt32();
+            break;
+          }
+          case 48: {
+            Which = input.ReadInt32();
+            break;
+          }
+          case 58: {
+            if (glow_ == null) {
+              glow_ = new global::SaveAnywhere.SaveData.Color();
+            }
+            input.ReadMessage(glow_);
+            break;
+          }
+          case 98:
+          case 96: {
+            buffAttributes_.AddEntriesFrom(input, _repeated_buffAttributes_codec);
+            break;
+          }
+        }
+      }
+    }
+
+  }
+
   /// <summary>
   ///  Player data
   /// </summary>
@@ -157,7 +454,7 @@ namespace SaveAnywhere.SaveData {
     public static pb::MessageParser<Farmer> Parser { get { return _parser; } }
 
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::SaveAnywhere.SaveData.GameReflection.Descriptor.MessageTypes[1]; }
+      get { return global::SaveAnywhere.SaveData.GameReflection.Descriptor.MessageTypes[2]; }
     }
 
     pbr::MessageDescriptor pb::IMessage.Descriptor {
@@ -177,6 +474,7 @@ namespace SaveAnywhere.SaveData {
       stamina_ = other.stamina_;
       health_ = other.health_;
       swimming_ = other.swimming_;
+      buffs_ = other.buffs_.Clone();
     }
 
     public Farmer Clone() {
@@ -243,6 +541,15 @@ namespace SaveAnywhere.SaveData {
       }
     }
 
+    /// <summary>Field number for the "buffs" field.</summary>
+    public const int BuffsFieldNumber = 25;
+    private static readonly pb::FieldCodec<global::SaveAnywhere.SaveData.Buff> _repeated_buffs_codec
+        = pb::FieldCodec.ForMessage(202, global::SaveAnywhere.SaveData.Buff.Parser);
+    private readonly pbc::RepeatedField<global::SaveAnywhere.SaveData.Buff> buffs_ = new pbc::RepeatedField<global::SaveAnywhere.SaveData.Buff>();
+    public pbc::RepeatedField<global::SaveAnywhere.SaveData.Buff> Buffs {
+      get { return buffs_; }
+    }
+
     public override bool Equals(object other) {
       return Equals(other as Farmer);
     }
@@ -260,6 +567,7 @@ namespace SaveAnywhere.SaveData {
       if (Stamina != other.Stamina) return false;
       if (Health != other.Health) return false;
       if (Swimming != other.Swimming) return false;
+      if(!buffs_.Equals(other.buffs_)) return false;
       return true;
     }
 
@@ -271,6 +579,7 @@ namespace SaveAnywhere.SaveData {
       if (Stamina != 0F) hash ^= Stamina.GetHashCode();
       if (Health != 0) hash ^= Health.GetHashCode();
       if (Swimming != false) hash ^= Swimming.GetHashCode();
+      hash ^= buffs_.GetHashCode();
       return hash;
     }
 
@@ -303,6 +612,7 @@ namespace SaveAnywhere.SaveData {
         output.WriteRawTag(48);
         output.WriteBool(Swimming);
       }
+      buffs_.WriteTo(output, _repeated_buffs_codec);
     }
 
     public int CalculateSize() {
@@ -325,6 +635,7 @@ namespace SaveAnywhere.SaveData {
       if (Swimming != false) {
         size += 1 + 1;
       }
+      size += buffs_.CalculateSize(_repeated_buffs_codec);
       return size;
     }
 
@@ -356,6 +667,7 @@ namespace SaveAnywhere.SaveData {
       if (other.Swimming != false) {
         Swimming = other.Swimming;
       }
+      buffs_.Add(other.buffs_);
     }
 
     public void MergeFrom(pb::CodedInputStream input) {
@@ -395,6 +707,10 @@ namespace SaveAnywhere.SaveData {
             Swimming = input.ReadBool();
             break;
           }
+          case 202: {
+            buffs_.AddEntriesFrom(input, _repeated_buffs_codec);
+            break;
+          }
         }
       }
     }
@@ -410,7 +726,7 @@ namespace SaveAnywhere.SaveData {
     public static pb::MessageParser<Game1> Parser { get { return _parser; } }
 
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::SaveAnywhere.SaveData.GameReflection.Descriptor.MessageTypes[2]; }
+      get { return global::SaveAnywhere.SaveData.GameReflection.Descriptor.MessageTypes[3]; }
     }
 
     pbr::MessageDescriptor pb::IMessage.Descriptor {
