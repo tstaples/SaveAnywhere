@@ -16,6 +16,7 @@ namespace SaveAnywhere
 {
     public class SaveManager
     {
+        private static readonly string tempSaveSuffix = "_TEMP";
         private static readonly int SaveCompleteFlag = 100;
         private static readonly string rootSavePath = Path.Combine(Constants.DataPath, "Mods", "SaveAnywhere");
 
@@ -34,12 +35,15 @@ namespace SaveAnywhere
         // and maybe store up to 5 backups or something
         public void Save()
         {
+            Log.Info("[SaveAnywhere] Saving game...");
+
+            // Run the regular game save
             IEnumerator<int> saveEnumerator = SaveGame.Save();
             while (saveEnumerator.MoveNext())
             {
                 if (saveEnumerator.Current == SaveCompleteFlag)
                 {
-                    Log.Debug("Finished saving");
+                    Log.Debug("Regular game save finished saving");
                 }
             }
 
@@ -48,16 +52,17 @@ namespace SaveAnywhere
                 // Create the save directory for this user if it doesn't exist
                 Directory.CreateDirectory(currentSaveFileDir);
 
+                // Serialize the game data
                 IMessage message = PopulateMessage(SaveData.Game1.Descriptor, Game1.game1);
 
-                using (var output = File.Create(currentSaveFilePath))
-                {
-                    message.WriteTo(output);
-                }
+                WriteToSaveFile(message);
+
+                // TODO: create events for this so we can display the text on the screen
+                Log.Info("[SaveAnywhere] Save complete!");
             }
             catch (Exception ex)
             {
-                Log.Error("Error saving data: " + ex);
+                Log.Error("[SaveAnywhere] Error saving data: " + ex);
             }
         }
 
@@ -65,31 +70,34 @@ namespace SaveAnywhere
         {
             try
             {
+                // Load normally if we don't find one of our save files
                 if (!File.Exists(currentSaveFilePath))
                 {
-                    Log.Info("No save file found");
+                    Log.Info("[SaveAnywhere] No custom save file found; loading normally.");
                     return;
                 }
 
+                Log.Info("[SaveAnywhere] Loading game...");
+
+
+                // Deserialize the game data
                 SaveData.Game1 game;
                 using (var input = File.OpenRead(currentSaveFilePath))
                 {
                     game = SaveData.Game1.Parser.ParseFrom(input);
                 }
 
+                // Set the corresponding game values to our saved ones
                 DePopulateMessage(game, Game1.game1);
 
-                // TODO: find a way to automate this if there are lots of cases
-                // Resolve stuff that can't be assigned
-                SaveData.Farmer player = game.Player;
-                Game1.warpFarmer(player.CurrentLocation.Name,
-                    (int)(player.Position.X / Game1.tileSize),
-                    (int)(player.Position.Y / Game1.tileSize), false);
-                Game1.player.faceDirection(player.FacingDirection);
+                // Do any manual adjustments like warping the player
+                PostLoadFixup(game);
+
+                Log.Info("[SaveAnywhere] Load complete!");
             }
             catch (Exception e)
             {
-                Log.Error("Failed to load data: " + e);
+                Log.Error("[SaveAnywhere] Failed to load data: " + e);
             }
         }
 
@@ -97,11 +105,18 @@ namespace SaveAnywhere
         {
             // Delete our save file so that if the player exits after waking up
             // then we won't accidently set the wrong info when they next load.
-            if (File.Exists(currentSaveFilePath))
-            {
-                Log.Debug("Deleting custom save file");
-                File.Delete(currentSaveFilePath);
-            }
+            DeleteFile(currentSaveFilePath);
+        }
+
+        private void PostLoadFixup(SaveData.Game1 game)
+        {
+            // TODO: find a way to automate this if there are lots of cases
+            // Resolve stuff that can't be assigned
+            SaveData.Farmer player = game.Player;
+            Game1.warpFarmer(player.CurrentLocation.Name,
+                (int)(player.Position.X / Game1.tileSize),
+                (int)(player.Position.Y / Game1.tileSize), false);
+            Game1.player.faceDirection(player.FacingDirection);
         }
 
         private IMessage PopulateMessage(MessageDescriptor descriptor, object instance)
@@ -131,7 +146,7 @@ namespace SaveAnywhere
                     if (value == null)
                     {
                         // For now we'll just leave it as it's default value, but still report it
-                        Log.Error("value for " + field.Name + " is null");
+                        Log.Error("[SaveAnywhere] Value for " + field.Name + " is null; setting to default.");
                         continue;
                     }
                     field.Accessor.SetValue(message, value);
@@ -158,9 +173,52 @@ namespace SaveAnywhere
             }
         }
 
+        private void WriteToSaveFile(IMessage message)
+        {
+            // Write to a temp file
+            string tempSavePath = currentSaveFilePath + tempSaveSuffix;
+            try
+            {
+                using (var output = File.Create(tempSavePath))
+                {
+                    message.WriteTo(output);
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Error("[SaveAnywhere] Failed to write to temp save file: " + e);
+                return;
+            }
 
+            // Remove the current save file
+            DeleteFile(currentSaveFilePath);
 
+            try
+            {
+                // Make the temp one the new one
+                File.Move(tempSavePath, currentSaveFilePath);
+            }
+            catch (Exception e)
+            {
+                Log.Error("[SaveAnywhere] Failed to rename " + tempSavePath + " to: " + currentSaveFilePath + ":\n" + e);
+            }
+        }
         
+        private static void DeleteFile(string path)
+        {
+            if (File.Exists(path))
+            {
+                Log.Debug("Deleting: " + path);
+                try
+                {
+                    File.Delete(path);
+                }
+                catch (Exception e)
+                {
+                    Log.Error("[SaveAnywhere] Error deleting file: " + path + ".\n" + e);
+                }
+            }
+        }
 
         private static T CheckProtoFieldNotNull<T>(T value, FieldDescriptor descriptor)
         {
