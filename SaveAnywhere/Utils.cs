@@ -89,5 +89,14 @@ namespace SaveAnywhere
         {
             return Math.Max(Math.Min(val, max), min);
         }
+
+        public static T CheckNotNull<T>(T value, string name)
+        {
+            if (value == null)
+            {
+                throw new ArgumentNullException(name);
+            }
+            return value;
+        }
     }
 }
