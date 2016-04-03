@@ -13,6 +13,7 @@ using StardewValley.Menus;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Google.Protobuf;
 
 namespace SaveAnywhere
 {
@@ -224,22 +225,28 @@ namespace SaveAnywhere
                 string saveFile = Path.Combine(savePath, "currentsave");
                 Directory.CreateDirectory(savePath);
 
-                MemoryStream stream = new MemoryStream();
-                BinaryFormatter formatter = new BinaryFormatter();
+                SaveData.Game game = new SaveData.Game
+                {
+                    TimeOfDay = Game1.timeOfDay,
+                    Player = new SaveData.Player
+                    {
+                        Position = new SaveData.Vector2
+                        {
+                            X = Game1.player.position.X,
+                            Y = Game1.player.position.Y
+                        },
+                        CurrentLocation = Game1.currentLocation.Name,
+                        FacingDirection = Game1.player.facingDirection,
+                        Stamina = Game1.player.stamina,
+                        Health = Game1.player.health,
+                        Swimming = Game1.player.swimming,
+                    }
+                };
 
-                SaveData saveData = new SaveData();
-                saveData.gameData.timeOfDay = Game1.timeOfDay;
-                saveData.playerData.currentLocation = Game1.currentLocation.Name;
-                saveData.playerData.position = Game1.player.position;
-                saveData.playerData.facingDirection = Game1.player.facingDirection;
-                saveData.playerData.stamina = Game1.player.stamina;
-                saveData.playerData.health = Game1.player.health;
-                saveData.playerData.swimming = Game1.player.swimming;
-                formatter.Serialize(stream, saveData);
-
-                FileStream fileStream = File.Create(saveFile);
-                fileStream.Write(stream.ToArray(), 0, (int)stream.Length);
-                fileStream.Close();
+                using (var output = File.Create(saveFile))
+                {
+                    game.WriteTo(output);
+                }
             }
             catch(Exception ex)
             {
@@ -252,19 +259,22 @@ namespace SaveAnywhere
             try
             {
                 string saveFile = Path.Combine(savePath, "currentsave");
-                FileStream filestream = new FileStream(saveFile, FileMode.Open);
-                BinaryFormatter formatter = new BinaryFormatter();
 
-                SaveData saveData = (SaveData)formatter.Deserialize(filestream);
-                filestream.Close();
+                SaveData.Game game;
+                using (var input = File.OpenRead(saveFile))
+                {
+                    game = SaveData.Game.Parser.ParseFrom(input);
+                }
 
-                Game1.timeOfDay = saveData.gameData.timeOfDay;
-                Vector2 pos = saveData.playerData.position;
-                Game1.warpFarmer(saveData.playerData.currentLocation, (int)(pos.X / Game1.tileSize), (int)(pos.Y / Game1.tileSize), false);
-                Game1.player.faceDirection(saveData.playerData.facingDirection);
-                Game1.player.stamina = saveData.playerData.stamina;
-                Game1.player.health = saveData.playerData.health;
-                Game1.player.swimming = saveData.playerData.swimming;
+                SaveData.Player player = game.Player;
+
+                Game1.timeOfDay = game.TimeOfDay;
+                Vector2 pos = new Vector2(player.Position.X, player.Position.Y);
+                Game1.warpFarmer(player.CurrentLocation, (int)(pos.X / Game1.tileSize), (int)(pos.Y / Game1.tileSize), false);
+                Game1.player.faceDirection(player.FacingDirection);
+                Game1.player.stamina = player.Stamina;
+                Game1.player.health = player.Health;
+                Game1.player.swimming = player.Swimming;
             }
             catch (Exception e)
             {

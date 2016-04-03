@@ -1,0 +1,19 @@
+﻿syntax = "proto3";
+import "Common.proto";
+//import "Player.proto";
+
+option csharp_namespace = "SaveAnywhere.SaveData";
+
+message Player {
+    Vector2 position = 1;
+	string currentLocation = 2;
+    int32 facingDirection = 3;
+    float stamina = 4;
+    int32 health = 5;
+    bool swimming = 6;
+}
+
+message Game {
+	int32 timeOfDay = 1;
+	Player player = 2;
+}

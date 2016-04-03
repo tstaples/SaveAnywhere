@@ -10,29 +10,29 @@ using Microsoft.Xna.Framework;
 
 namespace SaveAnywhere
 {
-    [Serializable]
-    public struct GameData
-    {
-        public int timeOfDay;
-    }
+    //[Serializable]
+    //public struct GameData
+    //{
+    //    public int timeOfDay;
+    //}
 
-    [Serializable]
-    public struct PlayerData
-    {
-        public string currentLocation;
-        public Vector2 position;
-        public int facingDirection;
-        public float stamina;
-        public int health;
-        public bool swimming;
-    }
+    //[Serializable]
+    //public struct PlayerData
+    //{
+    //    public string currentLocation;
+    //    public Vector2 position;
+    //    public int facingDirection;
+    //    public float stamina;
+    //    public int health;
+    //    public bool swimming;
+    //}
 
-    [Serializable]
-    public class SaveData
-    {
-        public GameData gameData = new GameData();
-        public PlayerData playerData = new PlayerData();
-    }
+    //[Serializable]
+    //public class SaveData
+    //{
+    //    public GameData gameData = new GameData();
+    //    public PlayerData playerData = new PlayerData();
+    //}
 
     /*
     - field name
