@@ -14,6 +14,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Google.Protobuf;
+using Google.Protobuf.Reflection;
+using System.Linq;
 
 namespace SaveAnywhere
 {
@@ -211,41 +213,43 @@ namespace SaveAnywhere
         // and maybe store up to 5 backups or something
         private void Save()
         {
-            IEnumerator<int> saveEnumerator = SaveGame.Save();
-            while (saveEnumerator.MoveNext())
-            {
-                if (saveEnumerator.Current == SaveCompleteFlag)
-                {
-                    Log.Debug("Finished saving");
-                }
-            }
+            //IEnumerator<int> saveEnumerator = SaveGame.Save();
+            //while (saveEnumerator.MoveNext())
+            //{
+            //    if (saveEnumerator.Current == SaveCompleteFlag)
+            //    {
+            //        Log.Debug("Finished saving");
+            //    }
+            //}
 
             try
             {
                 string saveFile = Path.Combine(savePath, "currentsave");
                 Directory.CreateDirectory(savePath);
 
-                SaveData.Game game = new SaveData.Game
-                {
-                    TimeOfDay = Game1.timeOfDay,
-                    Player = new SaveData.Player
-                    {
-                        Position = new SaveData.Vector2
-                        {
-                            X = Game1.player.position.X,
-                            Y = Game1.player.position.Y
-                        },
-                        CurrentLocation = Game1.currentLocation.Name,
-                        FacingDirection = Game1.player.facingDirection,
-                        Stamina = Game1.player.stamina,
-                        Health = Game1.player.health,
-                        Swimming = Game1.player.swimming,
-                    }
-                };
+                //SaveData.Game1 game = new SaveData.Game1
+                //{
+                //    TimeOfDay = Game1.timeOfDay,
+                //    Player = new SaveData.Farmer
+                //    {
+                //        Position = new SaveData.Vector2
+                //        {
+                //            X = Game1.player.position.X,
+                //            Y = Game1.player.position.Y
+                //        },
+                //        CurrentLocation = Game1.currentLocation.Name,
+                //        FacingDirection = Game1.player.facingDirection,
+                //        Stamina = Game1.player.stamina,
+                //        Health = Game1.player.health,
+                //        Swimming = Game1.player.swimming,
+                //    }
+                //};
+
+                IMessage message = PopulateMessage(SaveData.Game1.Descriptor, Game1.game1;
 
                 using (var output = File.Create(saveFile))
                 {
-                    game.WriteTo(output);
+                    message.WriteTo(output);
                 }
             }
             catch(Exception ex)
@@ -254,27 +258,94 @@ namespace SaveAnywhere
             }
         }
 
+        private IMessage PopulateMessage(MessageDescriptor descriptor, object instance)
+        {
+            IMessage message = (IMessage)Activator.CreateInstance(descriptor.ClrType);
+            string messageCLRName = descriptor.ClrType.Name;
+
+            foreach (var field in descriptor.Fields.InDeclarationOrder())
+            {
+                if (field.FieldType == FieldType.Message)
+                {
+                    // 1. find the field with mfields name from instance
+                    // 2. pass it's value as the instance for the recursive call
+                    field.Accessor.SetValue(message, 
+                        PopulateMessage(field.MessageType, GetFieldData(field.Name, instance)));
+                }
+                else
+                {
+                    object value = GetFieldData(field.Name, instance);
+                    if (value == null)
+                    {
+                        // For now we'll just leave it as it's default value, but still report it
+                        Log.Error("value for " + field.Name + " is null");
+                        continue;
+                    }
+                    field.Accessor.SetValue(message, value);
+                }
+            }
+            return message;
+        }
+
+        private Type ResolveTypeFromAssembly(Assembly assembly, string objectName)
+        {
+            Type type = null;
+
+            // TODO: only do this once and store it as a member of wherever this method is moved to
+            var namespaces = GetSDVAssemblyNamespaces(assembly);
+            foreach (var nspace in namespaces)
+            {
+                type = Type.GetType(nspace + "." + objectName);
+                if (type != null)
+                {
+                    break;
+                }
+            }
+            return type;
+        }
+
+        private IEnumerable<string> GetSDVAssemblyNamespaces(Assembly assembly)
+        {
+            return assembly.GetTypes()
+                .Select(t => t.Namespace)
+                .Where(n => n != null)
+                .Distinct();
+        }
+
+        private object GetFieldData(string fieldName, object instance)
+        {
+            FieldInfo fieldInfo = instance.GetType().GetField(fieldName,
+                  BindingFlags.IgnoreCase
+                | BindingFlags.Instance
+                | BindingFlags.NonPublic
+                | BindingFlags.Public
+                | BindingFlags.Static
+                | BindingFlags.FlattenHierarchy
+                );
+            return fieldInfo?.GetValue(instance);
+        }
+
         private void Load()
         {
             try
             {
                 string saveFile = Path.Combine(savePath, "currentsave");
 
-                SaveData.Game game;
-                using (var input = File.OpenRead(saveFile))
-                {
-                    game = SaveData.Game.Parser.ParseFrom(input);
-                }
+                //SaveData.Game game;
+                //using (var input = File.OpenRead(saveFile))
+                //{
+                //    game = SaveData.Game.Parser.ParseFrom(input);
+                //}
 
-                SaveData.Player player = game.Player;
+                //SaveData.Player player = game.Player;
 
-                Game1.timeOfDay = game.TimeOfDay;
-                Vector2 pos = new Vector2(player.Position.X, player.Position.Y);
-                Game1.warpFarmer(player.CurrentLocation, (int)(pos.X / Game1.tileSize), (int)(pos.Y / Game1.tileSize), false);
-                Game1.player.faceDirection(player.FacingDirection);
-                Game1.player.stamina = player.Stamina;
-                Game1.player.health = player.Health;
-                Game1.player.swimming = player.Swimming;
+                //Game1.timeOfDay = game.TimeOfDay;
+                //Vector2 pos = new Vector2(player.Position.X, player.Position.Y);
+                //Game1.warpFarmer(player.CurrentLocation, (int)(pos.X / Game1.tileSize), (int)(pos.Y / Game1.tileSize), false);
+                //Game1.player.faceDirection(player.FacingDirection);
+                //Game1.player.stamina = player.Stamina;
+                //Game1.player.health = player.Health;
+                //Game1.player.swimming = player.Swimming;
             }
             catch (Exception e)
             {

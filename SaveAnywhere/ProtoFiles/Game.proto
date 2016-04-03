@@ -1,19 +1,25 @@
 ﻿syntax = "proto3";
 import "Common.proto";
-//import "Player.proto";
 
 option csharp_namespace = "SaveAnywhere.SaveData";
 
-message Player {
+message GameLocation {
+	string name = 1; // Name of the location (ie. Town)
+	// TODO: Events and other needed data
+}
+
+// Player data
+message Farmer {
     Vector2 position = 1;
-	string currentLocation = 2;
+	GameLocation currentLocation = 2;
     int32 facingDirection = 3;
     float stamina = 4;
     int32 health = 5;
     bool swimming = 6;
 }
 
-message Game {
+// Main object containing all save data
+message Game1 {
 	int32 timeOfDay = 1;
-	Player player = 2;
+	Farmer player = 2;
 }

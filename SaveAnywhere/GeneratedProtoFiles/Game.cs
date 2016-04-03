@@ -23,17 +23,19 @@ namespace SaveAnywhere.SaveData {
     static GameReflection() {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
-            "CgpHYW1lLnByb3RvGgxDb21tb24ucHJvdG8iiQEKBlBsYXllchIaCghwb3Np",
-            "dGlvbhgBIAEoCzIILlZlY3RvcjISFwoPY3VycmVudExvY2F0aW9uGAIgASgJ",
+            "CgpHYW1lLnByb3RvGgxDb21tb24ucHJvdG8iHAoMR2FtZUxvY2F0aW9uEgwK",
+            "BG5hbWUYASABKAkimAEKBkZhcm1lchIaCghwb3NpdGlvbhgBIAEoCzIILlZl",
+            "Y3RvcjISJgoPY3VycmVudExvY2F0aW9uGAIgASgLMg0uR2FtZUxvY2F0aW9u",
             "EhcKD2ZhY2luZ0RpcmVjdGlvbhgDIAEoBRIPCgdzdGFtaW5hGAQgASgCEg4K",
-            "BmhlYWx0aBgFIAEoBRIQCghzd2ltbWluZxgGIAEoCCIyCgRHYW1lEhEKCXRp",
-            "bWVPZkRheRgBIAEoBRIXCgZwbGF5ZXIYAiABKAsyBy5QbGF5ZXJCGKoCFVNh",
-            "dmVBbnl3aGVyZS5TYXZlRGF0YWIGcHJvdG8z"));
+            "BmhlYWx0aBgFIAEoBRIQCghzd2ltbWluZxgGIAEoCCIzCgVHYW1lMRIRCgl0",
+            "aW1lT2ZEYXkYASABKAUSFwoGcGxheWVyGAIgASgLMgcuRmFybWVyQhiqAhVT",
+            "YXZlQW55d2hlcmUuU2F2ZURhdGFiBnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::SaveAnywhere.SaveData.CommonReflection.Descriptor, },
           new pbr::GeneratedCodeInfo(null, new pbr::GeneratedCodeInfo[] {
-            new pbr::GeneratedCodeInfo(typeof(global::SaveAnywhere.SaveData.Player), global::SaveAnywhere.SaveData.Player.Parser, new[]{ "Position", "CurrentLocation", "FacingDirection", "Stamina", "Health", "Swimming" }, null, null, null),
-            new pbr::GeneratedCodeInfo(typeof(global::SaveAnywhere.SaveData.Game), global::SaveAnywhere.SaveData.Game.Parser, new[]{ "TimeOfDay", "Player" }, null, null, null)
+            new pbr::GeneratedCodeInfo(typeof(global::SaveAnywhere.SaveData.GameLocation), global::SaveAnywhere.SaveData.GameLocation.Parser, new[]{ "Name" }, null, null, null),
+            new pbr::GeneratedCodeInfo(typeof(global::SaveAnywhere.SaveData.Farmer), global::SaveAnywhere.SaveData.Farmer.Parser, new[]{ "Position", "CurrentLocation", "FacingDirection", "Stamina", "Health", "Swimming" }, null, null, null),
+            new pbr::GeneratedCodeInfo(typeof(global::SaveAnywhere.SaveData.Game1), global::SaveAnywhere.SaveData.Game1.Parser, new[]{ "TimeOfDay", "Player" }, null, null, null)
           }));
     }
     #endregion
@@ -41,9 +43,9 @@ namespace SaveAnywhere.SaveData {
   }
   #region Messages
   [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-  public sealed partial class Player : pb::IMessage<Player> {
-    private static readonly pb::MessageParser<Player> _parser = new pb::MessageParser<Player>(() => new Player());
-    public static pb::MessageParser<Player> Parser { get { return _parser; } }
+  public sealed partial class GameLocation : pb::IMessage<GameLocation> {
+    private static readonly pb::MessageParser<GameLocation> _parser = new pb::MessageParser<GameLocation>(() => new GameLocation());
+    public static pb::MessageParser<GameLocation> Parser { get { return _parser; } }
 
     public static pbr::MessageDescriptor Descriptor {
       get { return global::SaveAnywhere.SaveData.GameReflection.Descriptor.MessageTypes[0]; }
@@ -53,23 +55,132 @@ namespace SaveAnywhere.SaveData {
       get { return Descriptor; }
     }
 
-    public Player() {
+    public GameLocation() {
       OnConstruction();
     }
 
     partial void OnConstruction();
 
-    public Player(Player other) : this() {
+    public GameLocation(GameLocation other) : this() {
+      name_ = other.name_;
+    }
+
+    public GameLocation Clone() {
+      return new GameLocation(this);
+    }
+
+    /// <summary>Field number for the "name" field.</summary>
+    public const int NameFieldNumber = 1;
+    private string name_ = "";
+    /// <summary>
+    ///  Name of the location (ie. Town)
+    /// </summary>
+    public string Name {
+      get { return name_; }
+      set {
+        name_ = pb::Preconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    public override bool Equals(object other) {
+      return Equals(other as GameLocation);
+    }
+
+    public bool Equals(GameLocation other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (Name != other.Name) return false;
+      return true;
+    }
+
+    public override int GetHashCode() {
+      int hash = 1;
+      if (Name.Length != 0) hash ^= Name.GetHashCode();
+      return hash;
+    }
+
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    public void WriteTo(pb::CodedOutputStream output) {
+      if (Name.Length != 0) {
+        output.WriteRawTag(10);
+        output.WriteString(Name);
+      }
+    }
+
+    public int CalculateSize() {
+      int size = 0;
+      if (Name.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(Name);
+      }
+      return size;
+    }
+
+    public void MergeFrom(GameLocation other) {
+      if (other == null) {
+        return;
+      }
+      if (other.Name.Length != 0) {
+        Name = other.Name;
+      }
+    }
+
+    public void MergeFrom(pb::CodedInputStream input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            input.SkipLastField();
+            break;
+          case 10: {
+            Name = input.ReadString();
+            break;
+          }
+        }
+      }
+    }
+
+  }
+
+  /// <summary>
+  ///  Player data
+  /// </summary>
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class Farmer : pb::IMessage<Farmer> {
+    private static readonly pb::MessageParser<Farmer> _parser = new pb::MessageParser<Farmer>(() => new Farmer());
+    public static pb::MessageParser<Farmer> Parser { get { return _parser; } }
+
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::SaveAnywhere.SaveData.GameReflection.Descriptor.MessageTypes[1]; }
+    }
+
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    public Farmer() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    public Farmer(Farmer other) : this() {
       Position = other.position_ != null ? other.Position.Clone() : null;
-      currentLocation_ = other.currentLocation_;
+      CurrentLocation = other.currentLocation_ != null ? other.CurrentLocation.Clone() : null;
       facingDirection_ = other.facingDirection_;
       stamina_ = other.stamina_;
       health_ = other.health_;
       swimming_ = other.swimming_;
     }
 
-    public Player Clone() {
-      return new Player(this);
+    public Farmer Clone() {
+      return new Farmer(this);
     }
 
     /// <summary>Field number for the "position" field.</summary>
@@ -84,11 +195,11 @@ namespace SaveAnywhere.SaveData {
 
     /// <summary>Field number for the "currentLocation" field.</summary>
     public const int CurrentLocationFieldNumber = 2;
-    private string currentLocation_ = "";
-    public string CurrentLocation {
+    private global::SaveAnywhere.SaveData.GameLocation currentLocation_;
+    public global::SaveAnywhere.SaveData.GameLocation CurrentLocation {
       get { return currentLocation_; }
       set {
-        currentLocation_ = pb::Preconditions.CheckNotNull(value, "value");
+        currentLocation_ = value;
       }
     }
 
@@ -133,10 +244,10 @@ namespace SaveAnywhere.SaveData {
     }
 
     public override bool Equals(object other) {
-      return Equals(other as Player);
+      return Equals(other as Farmer);
     }
 
-    public bool Equals(Player other) {
+    public bool Equals(Farmer other) {
       if (ReferenceEquals(other, null)) {
         return false;
       }
@@ -144,7 +255,7 @@ namespace SaveAnywhere.SaveData {
         return true;
       }
       if (!object.Equals(Position, other.Position)) return false;
-      if (CurrentLocation != other.CurrentLocation) return false;
+      if (!object.Equals(CurrentLocation, other.CurrentLocation)) return false;
       if (FacingDirection != other.FacingDirection) return false;
       if (Stamina != other.Stamina) return false;
       if (Health != other.Health) return false;
@@ -155,7 +266,7 @@ namespace SaveAnywhere.SaveData {
     public override int GetHashCode() {
       int hash = 1;
       if (position_ != null) hash ^= Position.GetHashCode();
-      if (CurrentLocation.Length != 0) hash ^= CurrentLocation.GetHashCode();
+      if (currentLocation_ != null) hash ^= CurrentLocation.GetHashCode();
       if (FacingDirection != 0) hash ^= FacingDirection.GetHashCode();
       if (Stamina != 0F) hash ^= Stamina.GetHashCode();
       if (Health != 0) hash ^= Health.GetHashCode();
@@ -172,9 +283,9 @@ namespace SaveAnywhere.SaveData {
         output.WriteRawTag(10);
         output.WriteMessage(Position);
       }
-      if (CurrentLocation.Length != 0) {
+      if (currentLocation_ != null) {
         output.WriteRawTag(18);
-        output.WriteString(CurrentLocation);
+        output.WriteMessage(CurrentLocation);
       }
       if (FacingDirection != 0) {
         output.WriteRawTag(24);
@@ -199,8 +310,8 @@ namespace SaveAnywhere.SaveData {
       if (position_ != null) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(Position);
       }
-      if (CurrentLocation.Length != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeStringSize(CurrentLocation);
+      if (currentLocation_ != null) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(CurrentLocation);
       }
       if (FacingDirection != 0) {
         size += 1 + pb::CodedOutputStream.ComputeInt32Size(FacingDirection);
@@ -217,7 +328,7 @@ namespace SaveAnywhere.SaveData {
       return size;
     }
 
-    public void MergeFrom(Player other) {
+    public void MergeFrom(Farmer other) {
       if (other == null) {
         return;
       }
@@ -227,8 +338,11 @@ namespace SaveAnywhere.SaveData {
         }
         Position.MergeFrom(other.Position);
       }
-      if (other.CurrentLocation.Length != 0) {
-        CurrentLocation = other.CurrentLocation;
+      if (other.currentLocation_ != null) {
+        if (currentLocation_ == null) {
+          currentLocation_ = new global::SaveAnywhere.SaveData.GameLocation();
+        }
+        CurrentLocation.MergeFrom(other.CurrentLocation);
       }
       if (other.FacingDirection != 0) {
         FacingDirection = other.FacingDirection;
@@ -259,7 +373,10 @@ namespace SaveAnywhere.SaveData {
             break;
           }
           case 18: {
-            CurrentLocation = input.ReadString();
+            if (currentLocation_ == null) {
+              currentLocation_ = new global::SaveAnywhere.SaveData.GameLocation();
+            }
+            input.ReadMessage(currentLocation_);
             break;
           }
           case 24: {
@@ -284,32 +401,35 @@ namespace SaveAnywhere.SaveData {
 
   }
 
+  /// <summary>
+  ///  Main object containing all save data
+  /// </summary>
   [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-  public sealed partial class Game : pb::IMessage<Game> {
-    private static readonly pb::MessageParser<Game> _parser = new pb::MessageParser<Game>(() => new Game());
-    public static pb::MessageParser<Game> Parser { get { return _parser; } }
+  public sealed partial class Game1 : pb::IMessage<Game1> {
+    private static readonly pb::MessageParser<Game1> _parser = new pb::MessageParser<Game1>(() => new Game1());
+    public static pb::MessageParser<Game1> Parser { get { return _parser; } }
 
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::SaveAnywhere.SaveData.GameReflection.Descriptor.MessageTypes[1]; }
+      get { return global::SaveAnywhere.SaveData.GameReflection.Descriptor.MessageTypes[2]; }
     }
 
     pbr::MessageDescriptor pb::IMessage.Descriptor {
       get { return Descriptor; }
     }
 
-    public Game() {
+    public Game1() {
       OnConstruction();
     }
 
     partial void OnConstruction();
 
-    public Game(Game other) : this() {
+    public Game1(Game1 other) : this() {
       timeOfDay_ = other.timeOfDay_;
       Player = other.player_ != null ? other.Player.Clone() : null;
     }
 
-    public Game Clone() {
-      return new Game(this);
+    public Game1 Clone() {
+      return new Game1(this);
     }
 
     /// <summary>Field number for the "timeOfDay" field.</summary>
@@ -324,8 +444,8 @@ namespace SaveAnywhere.SaveData {
 
     /// <summary>Field number for the "player" field.</summary>
     public const int PlayerFieldNumber = 2;
-    private global::SaveAnywhere.SaveData.Player player_;
-    public global::SaveAnywhere.SaveData.Player Player {
+    private global::SaveAnywhere.SaveData.Farmer player_;
+    public global::SaveAnywhere.SaveData.Farmer Player {
       get { return player_; }
       set {
         player_ = value;
@@ -333,10 +453,10 @@ namespace SaveAnywhere.SaveData {
     }
 
     public override bool Equals(object other) {
-      return Equals(other as Game);
+      return Equals(other as Game1);
     }
 
-    public bool Equals(Game other) {
+    public bool Equals(Game1 other) {
       if (ReferenceEquals(other, null)) {
         return false;
       }
@@ -381,7 +501,7 @@ namespace SaveAnywhere.SaveData {
       return size;
     }
 
-    public void MergeFrom(Game other) {
+    public void MergeFrom(Game1 other) {
       if (other == null) {
         return;
       }
@@ -390,7 +510,7 @@ namespace SaveAnywhere.SaveData {
       }
       if (other.player_ != null) {
         if (player_ == null) {
-          player_ = new global::SaveAnywhere.SaveData.Player();
+          player_ = new global::SaveAnywhere.SaveData.Farmer();
         }
         Player.MergeFrom(other.Player);
       }
@@ -409,7 +529,7 @@ namespace SaveAnywhere.SaveData {
           }
           case 18: {
             if (player_ == null) {
-              player_ = new global::SaveAnywhere.SaveData.Player();
+              player_ = new global::SaveAnywhere.SaveData.Farmer();
             }
             input.ReadMessage(player_);
             break;

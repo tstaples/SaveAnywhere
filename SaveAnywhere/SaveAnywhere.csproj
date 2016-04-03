@@ -68,7 +68,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="generateProtoc.bat" />
+    <None Include="generateProtos.bat" />
     <None Include="manifest.json" />
     <None Include="ProtoFiles\Common.proto" />
     <None Include="ProtoFiles\Game.proto" />
