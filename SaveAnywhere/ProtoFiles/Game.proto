@@ -19,6 +19,12 @@ message Buff {
 	repeated int32 buffAttributes = 12 [packed=true];
 }
 
+message BuffsDisplay {
+	// This field is actually a dict, so we'll have to do some nasty stuff
+	repeated Buff buffs = 1;
+	//repeated Buff otherBuffs = 2;
+}
+
 // Player data
 message Farmer {
     Vector2 position = 1;
@@ -28,11 +34,12 @@ message Farmer {
     int32 health = 5;
     bool swimming = 6;
 
-	repeated Buff buffs = 25;
+	//repeated Buff buffs = 25;
 }
 
 // Main object containing all save data
 message Game1 {
 	int32 timeOfDay = 1;
 	Farmer player = 2;
+	BuffsDisplay buffsDisplay = 15;
 }

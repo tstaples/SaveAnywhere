@@ -28,20 +28,22 @@ namespace SaveAnywhere.SaveData {
             "ASABKAUSEwoLZGVzY3JpcHRpb24YAiABKAkSDgoGc291cmNlGAMgASgJEg0K",
             "BXRvdGFsGAQgASgFEhIKCnNoZWV0SW5kZXgYBSABKAUSDQoFd2hpY2gYBiAB",
             "KAUSFAoEZ2xvdxgHIAEoCzIGLkNvbG9yEhoKDmJ1ZmZBdHRyaWJ1dGVzGAwg",
-            "AygFQgIQASKuAQoGRmFybWVyEhoKCHBvc2l0aW9uGAEgASgLMgguVmVjdG9y",
-            "MhImCg9jdXJyZW50TG9jYXRpb24YAiABKAsyDS5HYW1lTG9jYXRpb24SFwoP",
-            "ZmFjaW5nRGlyZWN0aW9uGAMgASgFEg8KB3N0YW1pbmEYBCABKAISDgoGaGVh",
-            "bHRoGAUgASgFEhAKCHN3aW1taW5nGAYgASgIEhQKBWJ1ZmZzGBkgAygLMgUu",
-            "QnVmZiIzCgVHYW1lMRIRCgl0aW1lT2ZEYXkYASABKAUSFwoGcGxheWVyGAIg",
-            "ASgLMgcuRmFybWVyQhiqAhVTYXZlQW55d2hlcmUuU2F2ZURhdGFiBnByb3Rv",
-            "Mw=="));
+            "AygFQgIQASIkCgxCdWZmc0Rpc3BsYXkSFAoFYnVmZnMYASADKAsyBS5CdWZm",
+            "IpgBCgZGYXJtZXISGgoIcG9zaXRpb24YASABKAsyCC5WZWN0b3IyEiYKD2N1",
+            "cnJlbnRMb2NhdGlvbhgCIAEoCzINLkdhbWVMb2NhdGlvbhIXCg9mYWNpbmdE",
+            "aXJlY3Rpb24YAyABKAUSDwoHc3RhbWluYRgEIAEoAhIOCgZoZWFsdGgYBSAB",
+            "KAUSEAoIc3dpbW1pbmcYBiABKAgiWAoFR2FtZTESEQoJdGltZU9mRGF5GAEg",
+            "ASgFEhcKBnBsYXllchgCIAEoCzIHLkZhcm1lchIjCgxidWZmc0Rpc3BsYXkY",
+            "DyABKAsyDS5CdWZmc0Rpc3BsYXlCGKoCFVNhdmVBbnl3aGVyZS5TYXZlRGF0",
+            "YWIGcHJvdG8z"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::SaveAnywhere.SaveData.CommonReflection.Descriptor, },
           new pbr::GeneratedCodeInfo(null, new pbr::GeneratedCodeInfo[] {
             new pbr::GeneratedCodeInfo(typeof(global::SaveAnywhere.SaveData.GameLocation), global::SaveAnywhere.SaveData.GameLocation.Parser, new[]{ "Name" }, null, null, null),
             new pbr::GeneratedCodeInfo(typeof(global::SaveAnywhere.SaveData.Buff), global::SaveAnywhere.SaveData.Buff.Parser, new[]{ "MillisecondsDuration", "Description", "Source", "Total", "SheetIndex", "Which", "Glow", "BuffAttributes" }, null, null, null),
-            new pbr::GeneratedCodeInfo(typeof(global::SaveAnywhere.SaveData.Farmer), global::SaveAnywhere.SaveData.Farmer.Parser, new[]{ "Position", "CurrentLocation", "FacingDirection", "Stamina", "Health", "Swimming", "Buffs" }, null, null, null),
-            new pbr::GeneratedCodeInfo(typeof(global::SaveAnywhere.SaveData.Game1), global::SaveAnywhere.SaveData.Game1.Parser, new[]{ "TimeOfDay", "Player" }, null, null, null)
+            new pbr::GeneratedCodeInfo(typeof(global::SaveAnywhere.SaveData.BuffsDisplay), global::SaveAnywhere.SaveData.BuffsDisplay.Parser, new[]{ "Buffs" }, null, null, null),
+            new pbr::GeneratedCodeInfo(typeof(global::SaveAnywhere.SaveData.Farmer), global::SaveAnywhere.SaveData.Farmer.Parser, new[]{ "Position", "CurrentLocation", "FacingDirection", "Stamina", "Health", "Swimming" }, null, null, null),
+            new pbr::GeneratedCodeInfo(typeof(global::SaveAnywhere.SaveData.Game1), global::SaveAnywhere.SaveData.Game1.Parser, new[]{ "TimeOfDay", "Player", "BuffsDisplay" }, null, null, null)
           }));
     }
     #endregion
@@ -445,6 +447,104 @@ namespace SaveAnywhere.SaveData {
 
   }
 
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class BuffsDisplay : pb::IMessage<BuffsDisplay> {
+    private static readonly pb::MessageParser<BuffsDisplay> _parser = new pb::MessageParser<BuffsDisplay>(() => new BuffsDisplay());
+    public static pb::MessageParser<BuffsDisplay> Parser { get { return _parser; } }
+
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::SaveAnywhere.SaveData.GameReflection.Descriptor.MessageTypes[2]; }
+    }
+
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    public BuffsDisplay() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    public BuffsDisplay(BuffsDisplay other) : this() {
+      buffs_ = other.buffs_.Clone();
+    }
+
+    public BuffsDisplay Clone() {
+      return new BuffsDisplay(this);
+    }
+
+    /// <summary>Field number for the "buffs" field.</summary>
+    public const int BuffsFieldNumber = 1;
+    private static readonly pb::FieldCodec<global::SaveAnywhere.SaveData.Buff> _repeated_buffs_codec
+        = pb::FieldCodec.ForMessage(10, global::SaveAnywhere.SaveData.Buff.Parser);
+    private readonly pbc::RepeatedField<global::SaveAnywhere.SaveData.Buff> buffs_ = new pbc::RepeatedField<global::SaveAnywhere.SaveData.Buff>();
+    /// <summary>
+    ///  This field is actually a dict, so we'll have to do some nasty stuff
+    /// </summary>
+    public pbc::RepeatedField<global::SaveAnywhere.SaveData.Buff> Buffs {
+      get { return buffs_; }
+    }
+
+    public override bool Equals(object other) {
+      return Equals(other as BuffsDisplay);
+    }
+
+    public bool Equals(BuffsDisplay other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if(!buffs_.Equals(other.buffs_)) return false;
+      return true;
+    }
+
+    public override int GetHashCode() {
+      int hash = 1;
+      hash ^= buffs_.GetHashCode();
+      return hash;
+    }
+
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    public void WriteTo(pb::CodedOutputStream output) {
+      buffs_.WriteTo(output, _repeated_buffs_codec);
+    }
+
+    public int CalculateSize() {
+      int size = 0;
+      size += buffs_.CalculateSize(_repeated_buffs_codec);
+      return size;
+    }
+
+    public void MergeFrom(BuffsDisplay other) {
+      if (other == null) {
+        return;
+      }
+      buffs_.Add(other.buffs_);
+    }
+
+    public void MergeFrom(pb::CodedInputStream input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            input.SkipLastField();
+            break;
+          case 10: {
+            buffs_.AddEntriesFrom(input, _repeated_buffs_codec);
+            break;
+          }
+        }
+      }
+    }
+
+  }
+
   /// <summary>
   ///  Player data
   /// </summary>
@@ -454,7 +554,7 @@ namespace SaveAnywhere.SaveData {
     public static pb::MessageParser<Farmer> Parser { get { return _parser; } }
 
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::SaveAnywhere.SaveData.GameReflection.Descriptor.MessageTypes[2]; }
+      get { return global::SaveAnywhere.SaveData.GameReflection.Descriptor.MessageTypes[3]; }
     }
 
     pbr::MessageDescriptor pb::IMessage.Descriptor {
@@ -474,7 +574,6 @@ namespace SaveAnywhere.SaveData {
       stamina_ = other.stamina_;
       health_ = other.health_;
       swimming_ = other.swimming_;
-      buffs_ = other.buffs_.Clone();
     }
 
     public Farmer Clone() {
@@ -541,15 +640,6 @@ namespace SaveAnywhere.SaveData {
       }
     }
 
-    /// <summary>Field number for the "buffs" field.</summary>
-    public const int BuffsFieldNumber = 25;
-    private static readonly pb::FieldCodec<global::SaveAnywhere.SaveData.Buff> _repeated_buffs_codec
-        = pb::FieldCodec.ForMessage(202, global::SaveAnywhere.SaveData.Buff.Parser);
-    private readonly pbc::RepeatedField<global::SaveAnywhere.SaveData.Buff> buffs_ = new pbc::RepeatedField<global::SaveAnywhere.SaveData.Buff>();
-    public pbc::RepeatedField<global::SaveAnywhere.SaveData.Buff> Buffs {
-      get { return buffs_; }
-    }
-
     public override bool Equals(object other) {
       return Equals(other as Farmer);
     }
@@ -567,7 +657,6 @@ namespace SaveAnywhere.SaveData {
       if (Stamina != other.Stamina) return false;
       if (Health != other.Health) return false;
       if (Swimming != other.Swimming) return false;
-      if(!buffs_.Equals(other.buffs_)) return false;
       return true;
     }
 
@@ -579,7 +668,6 @@ namespace SaveAnywhere.SaveData {
       if (Stamina != 0F) hash ^= Stamina.GetHashCode();
       if (Health != 0) hash ^= Health.GetHashCode();
       if (Swimming != false) hash ^= Swimming.GetHashCode();
-      hash ^= buffs_.GetHashCode();
       return hash;
     }
 
@@ -612,7 +700,6 @@ namespace SaveAnywhere.SaveData {
         output.WriteRawTag(48);
         output.WriteBool(Swimming);
       }
-      buffs_.WriteTo(output, _repeated_buffs_codec);
     }
 
     public int CalculateSize() {
@@ -635,7 +722,6 @@ namespace SaveAnywhere.SaveData {
       if (Swimming != false) {
         size += 1 + 1;
       }
-      size += buffs_.CalculateSize(_repeated_buffs_codec);
       return size;
     }
 
@@ -667,7 +753,6 @@ namespace SaveAnywhere.SaveData {
       if (other.Swimming != false) {
         Swimming = other.Swimming;
       }
-      buffs_.Add(other.buffs_);
     }
 
     public void MergeFrom(pb::CodedInputStream input) {
@@ -707,10 +792,6 @@ namespace SaveAnywhere.SaveData {
             Swimming = input.ReadBool();
             break;
           }
-          case 202: {
-            buffs_.AddEntriesFrom(input, _repeated_buffs_codec);
-            break;
-          }
         }
       }
     }
@@ -726,7 +807,7 @@ namespace SaveAnywhere.SaveData {
     public static pb::MessageParser<Game1> Parser { get { return _parser; } }
 
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::SaveAnywhere.SaveData.GameReflection.Descriptor.MessageTypes[3]; }
+      get { return global::SaveAnywhere.SaveData.GameReflection.Descriptor.MessageTypes[4]; }
     }
 
     pbr::MessageDescriptor pb::IMessage.Descriptor {
@@ -742,6 +823,7 @@ namespace SaveAnywhere.SaveData {
     public Game1(Game1 other) : this() {
       timeOfDay_ = other.timeOfDay_;
       Player = other.player_ != null ? other.Player.Clone() : null;
+      BuffsDisplay = other.buffsDisplay_ != null ? other.BuffsDisplay.Clone() : null;
     }
 
     public Game1 Clone() {
@@ -768,6 +850,16 @@ namespace SaveAnywhere.SaveData {
       }
     }
 
+    /// <summary>Field number for the "buffsDisplay" field.</summary>
+    public const int BuffsDisplayFieldNumber = 15;
+    private global::SaveAnywhere.SaveData.BuffsDisplay buffsDisplay_;
+    public global::SaveAnywhere.SaveData.BuffsDisplay BuffsDisplay {
+      get { return buffsDisplay_; }
+      set {
+        buffsDisplay_ = value;
+      }
+    }
+
     public override bool Equals(object other) {
       return Equals(other as Game1);
     }
@@ -781,6 +873,7 @@ namespace SaveAnywhere.SaveData {
       }
       if (TimeOfDay != other.TimeOfDay) return false;
       if (!object.Equals(Player, other.Player)) return false;
+      if (!object.Equals(BuffsDisplay, other.BuffsDisplay)) return false;
       return true;
     }
 
@@ -788,6 +881,7 @@ namespace SaveAnywhere.SaveData {
       int hash = 1;
       if (TimeOfDay != 0) hash ^= TimeOfDay.GetHashCode();
       if (player_ != null) hash ^= Player.GetHashCode();
+      if (buffsDisplay_ != null) hash ^= BuffsDisplay.GetHashCode();
       return hash;
     }
 
@@ -804,6 +898,10 @@ namespace SaveAnywhere.SaveData {
         output.WriteRawTag(18);
         output.WriteMessage(Player);
       }
+      if (buffsDisplay_ != null) {
+        output.WriteRawTag(122);
+        output.WriteMessage(BuffsDisplay);
+      }
     }
 
     public int CalculateSize() {
@@ -813,6 +911,9 @@ namespace SaveAnywhere.SaveData {
       }
       if (player_ != null) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(Player);
+      }
+      if (buffsDisplay_ != null) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(BuffsDisplay);
       }
       return size;
     }
@@ -829,6 +930,12 @@ namespace SaveAnywhere.SaveData {
           player_ = new global::SaveAnywhere.SaveData.Farmer();
         }
         Player.MergeFrom(other.Player);
+      }
+      if (other.buffsDisplay_ != null) {
+        if (buffsDisplay_ == null) {
+          buffsDisplay_ = new global::SaveAnywhere.SaveData.BuffsDisplay();
+        }
+        BuffsDisplay.MergeFrom(other.BuffsDisplay);
       }
     }
 
@@ -848,6 +955,13 @@ namespace SaveAnywhere.SaveData {
               player_ = new global::SaveAnywhere.SaveData.Farmer();
             }
             input.ReadMessage(player_);
+            break;
+          }
+          case 122: {
+            if (buffsDisplay_ == null) {
+              buffsDisplay_ = new global::SaveAnywhere.SaveData.BuffsDisplay();
+            }
+            input.ReadMessage(buffsDisplay_);
             break;
           }
         }

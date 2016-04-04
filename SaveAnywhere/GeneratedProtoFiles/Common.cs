@@ -24,13 +24,15 @@ namespace SaveAnywhere.SaveData {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
             "CgxDb21tb24ucHJvdG8iHwoHVmVjdG9yMhIJCgF4GAEgASgCEgkKAXkYAiAB",
-            "KAIiHAoFQ29sb3ISEwoLcGFja2VkVmFsdWUYASABKA1CGKoCFVNhdmVBbnl3",
-            "aGVyZS5TYXZlRGF0YWIGcHJvdG8z"));
+            "KAIiHAoFQ29sb3ISEwoLcGFja2VkVmFsdWUYASABKA0iGwoZQ2xpY2thYmxl",
+            "VGV4dHVyZUNvbXBvbmVudEIYqgIVU2F2ZUFueXdoZXJlLlNhdmVEYXRhYgZw",
+            "cm90bzM="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedCodeInfo(null, new pbr::GeneratedCodeInfo[] {
             new pbr::GeneratedCodeInfo(typeof(global::SaveAnywhere.SaveData.Vector2), global::SaveAnywhere.SaveData.Vector2.Parser, new[]{ "X", "Y" }, null, null, null),
-            new pbr::GeneratedCodeInfo(typeof(global::SaveAnywhere.SaveData.Color), global::SaveAnywhere.SaveData.Color.Parser, new[]{ "PackedValue" }, null, null, null)
+            new pbr::GeneratedCodeInfo(typeof(global::SaveAnywhere.SaveData.Color), global::SaveAnywhere.SaveData.Color.Parser, new[]{ "PackedValue" }, null, null, null),
+            new pbr::GeneratedCodeInfo(typeof(global::SaveAnywhere.SaveData.ClickableTextureComponent), global::SaveAnywhere.SaveData.ClickableTextureComponent.Parser, null, null, null, null)
           }));
     }
     #endregion
@@ -264,6 +266,85 @@ namespace SaveAnywhere.SaveData {
             PackedValue = input.ReadUInt32();
             break;
           }
+        }
+      }
+    }
+
+  }
+
+  /// <summary>
+  ///  Empty
+  /// </summary>
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class ClickableTextureComponent : pb::IMessage<ClickableTextureComponent> {
+    private static readonly pb::MessageParser<ClickableTextureComponent> _parser = new pb::MessageParser<ClickableTextureComponent>(() => new ClickableTextureComponent());
+    public static pb::MessageParser<ClickableTextureComponent> Parser { get { return _parser; } }
+
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::SaveAnywhere.SaveData.CommonReflection.Descriptor.MessageTypes[2]; }
+    }
+
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    public ClickableTextureComponent() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    public ClickableTextureComponent(ClickableTextureComponent other) : this() {
+    }
+
+    public ClickableTextureComponent Clone() {
+      return new ClickableTextureComponent(this);
+    }
+
+    public override bool Equals(object other) {
+      return Equals(other as ClickableTextureComponent);
+    }
+
+    public bool Equals(ClickableTextureComponent other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      return true;
+    }
+
+    public override int GetHashCode() {
+      int hash = 1;
+      return hash;
+    }
+
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    public void WriteTo(pb::CodedOutputStream output) {
+    }
+
+    public int CalculateSize() {
+      int size = 0;
+      return size;
+    }
+
+    public void MergeFrom(ClickableTextureComponent other) {
+      if (other == null) {
+        return;
+      }
+    }
+
+    public void MergeFrom(pb::CodedInputStream input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            input.SkipLastField();
+            break;
         }
       }
     }

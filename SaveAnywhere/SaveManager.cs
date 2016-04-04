@@ -8,10 +8,12 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using Microsoft.Xna.Framework;
 using Google.Protobuf;
+using Google.Protobuf.Collections;
 using Google.Protobuf.Reflection;
 using System.Linq;
 using StardewModdingAPI;
 using StardewValley;
+using StardewValley.Menus;
 
 namespace SaveAnywhere
 {
@@ -55,6 +57,8 @@ namespace SaveAnywhere
 
                 // Serialize the game data
                 IMessage message = PopulateMessage(SaveData.Game1.Descriptor, Game1.game1);
+
+                message = PostSaveFixup((SaveData.Game1)message);
 
                 WriteToSaveFile(message);
 
@@ -118,6 +122,26 @@ namespace SaveAnywhere
                 (int)(player.Position.X / Game1.tileSize),
                 (int)(player.Position.Y / Game1.tileSize), false);
             Game1.player.faceDirection(player.FacingDirection);
+
+            var buffs = game.BuffsDisplay.Buffs;
+            Game1.buffsDisplay.otherBuffs = new List<Buff>();
+            for (int i = 0; i < buffs.Count; ++i)
+            {
+                var buff = new Buff(-1);
+                DePopulateMessage(buffs[i], buff);
+                Game1.buffsDisplay.addOtherBuff(buff);
+            }
+        }
+
+        private IMessage PostSaveFixup(SaveData.Game1 game)
+        {
+            var buffsDict = (Dictionary<ClickableTextureComponent, Buff>)TypeUtils.GetPrivateFieldData("buffs", Game1.buffsDisplay);
+            var buffs = buffsDict.Values.ToList().Concat(Game1.buffsDisplay.otherBuffs);
+            foreach (var buff in buffs)
+            {
+                game.BuffsDisplay.Buffs.Add((SaveData.Buff)PopulateMessage(SaveData.Buff.Descriptor, buff));
+            }
+            return game;
         }
 
         private IMessage PopulateMessage(MessageDescriptor descriptor, object instance)
@@ -128,26 +152,37 @@ namespace SaveAnywhere
 
             foreach (var field in descriptor.Fields.InDeclarationOrder())
             {
-                // We might be able to get away with this, but there may be cases were it is supposed to be null (ie. thing hasn't spawned)
-                object value = CheckProtoFieldNotNull(GetFieldData(field.Name, instance), field);
+                // If we don't find the value we'll assume it will be assigned manually later
+                object value = EnsureField(field.Name, instance);
+                if (value == null)
+                {
+                    Log.Debug("Value for field: " + field.Name + " is null; Leaving as default.");
+                    continue;
+                }
 
                 if (field.IsRepeated)
                 {
                     // We only have the type itself, not the type of collection.
                     // It's pretty unlikely we'll find a collection of the same type with the same name (i hope).
-                    if (Utils.IsEnumerableOfType(value, field.GetType()))
+                    if (TypeUtils.IsEnumerableOfType(value, GetFieldTypeName(field)))
                     {
-                        //field.add
+                        // Get the repeated field as a list
+                        var list = (IList)field.Accessor.GetValue(message);
                         foreach (var item in (IEnumerable)value)
                         {
-                            // assign the values to our field if i can figure out how to get the field as repeated.
-                            // or we might be able to just write to it
+                            // If the item is a complex type then recursively create and assign
+                            if (field.FieldType == FieldType.Message)
+                            {
+                                IMessage fieldMessage = PopulateMessage(field.MessageType, item);
+                                list.Add(fieldMessage);
+                            }
+                            else
+                            {
+                                list.Add(item);
+                            }
                         }
                     }
-                    else
-                    {
-                        // do something since if we don't find it we're kinda fooked
-                    }
+                    continue;
                 }
 
                 // We can only assign native types at the moment. This means any
@@ -162,13 +197,6 @@ namespace SaveAnywhere
                     continue;
                 }
 
-                //object value = GetFieldData(field.Name, instance);
-                if (value == null)
-                {
-                    // For now we'll just leave it as it's default value, but still report it
-                    Log.Error("[SaveAnywhere] Value for " + field.Name + " is null; setting to default.");
-                    continue;
-                }
                 field.Accessor.SetValue(message, value);
             }
             return message;
@@ -179,15 +207,51 @@ namespace SaveAnywhere
         {
             foreach (var field in message.Descriptor.Fields.InDeclarationOrder())
             {
-                //object value = CheckProtoFieldNotNull(GetFieldData(field.Name, instance), field);
-                object value = field.Accessor.GetValue(message);
-                if (field.FieldType == FieldType.Message)
+                var fieldInfo = TypeUtils.GetField(field.Name, instance);
+                if (fieldInfo == null)
                 {
-                    DePopulateMessage((IMessage)field.Accessor.GetValue(message), value);
+                    Log.Debug("Could not find field info for: " + field.Name + "; skipping.");
+                    continue;
+                }
+
+                object fieldValue = field.Accessor.GetValue(message);
+
+                if (field.IsRepeated)
+                {
+                    IList src = (IList)fieldValue;
+
+                    // TODO: maybe supports dicts
+                    var genericTypeArgs = TypeUtils.GetGenericArgTypes(fieldInfo.FieldType);
+                    Type listType = (genericTypeArgs.Length == 1) ? genericTypeArgs[0] : null;
+                    if (listType == null)
+                    {
+                        Log.Debug("Could not get list type for field: " + field.Name);
+                        continue;
+                    }
+
+                    //IList dest = (IList)TypeUtils.CreateGenericList(listType);
+                    for (int i = 0; i < src.Count; ++i)
+                    {
+                        if (field.FieldType == FieldType.Message)
+                        {
+                            var item = Activator.CreateInstance(listType);
+                            DePopulateMessage((IMessage)src[i], item);
+                        }
+                        else
+                        {
+                            (fieldInfo.GetValue(instance) as IList)[i] = src[i];
+                            //dest.Add(src[i]);
+                        }
+                    }
+                }
+                else if (field.FieldType == FieldType.Message)
+                {
+                    //DePopulateMessage((IMessage)field.Accessor.GetValue(message), value);
+                    DePopulateMessage((IMessage)fieldValue, fieldInfo.GetValue(instance));
                 }
                 else
                 {
-                    SetFieldData(field.Name, instance, value);
+                    fieldInfo.SetValue(instance, fieldValue);
                 }
             }
         }
@@ -239,6 +303,44 @@ namespace SaveAnywhere
             }
         }
 
+        private string GetFieldTypeName(FieldDescriptor descriptor)
+        {
+            if (descriptor.FieldType == FieldType.Message)
+            {
+                return descriptor.MessageType.Name;
+            }
+            return descriptor.FieldType.ToString();
+        }
+
+        private bool IsFieldDefaultValue(FieldDescriptor descriptor, IMessage message)
+        {
+            object value = descriptor.Accessor.GetValue(message);
+            switch (descriptor.FieldType)
+            {
+                case FieldType.Message: // Defaults to null
+                    return (value == null);
+                case FieldType.Bytes: // Defaults to empty bytestring
+                    return (value as ByteString).IsEmpty;
+                case FieldType.Bool: // Defaults to false
+                    return !value.AsBool();
+                case FieldType.String:
+                    return ((value as String).Length == 0);
+            }
+            // I'm hoping all the numeric and enum types will cast to int fine
+            return ((int)value == 0);
+        }
+
+        private static object EnsureField(string fieldName, object instance)
+        {
+            var fieldInfo = TypeUtils.GetField(fieldName, instance);
+            if (fieldInfo == null)
+            {
+                Log.Debug("Could not find value for: " + fieldName);
+                return null;
+            }
+            return fieldInfo.GetValue(instance);
+        }
+
         private static T CheckProtoFieldNotNull<T>(T value, FieldDescriptor descriptor)
         {
             if (value == null)
@@ -246,82 +348,6 @@ namespace SaveAnywhere
                 throw new ArgumentNullException(descriptor.Name, "Proto message for type: " + descriptor.FieldType + " is probably not implemented");
             }
             return value;
-        }
-
-        private static Type ResolveTypeFromAssembly(Assembly assembly, string objectName)
-        {
-            Type type = null;
-
-            // TODO: only do this once and store it as a member of wherever this method is moved to
-            var namespaces = GetSDVAssemblyNamespaces(assembly);
-            foreach (var nspace in namespaces)
-            {
-                type = Type.GetType(nspace + "." + objectName);
-                if (type != null)
-                {
-                    break;
-                }
-            }
-            return type;
-        }
-
-        private static IEnumerable<string> GetSDVAssemblyNamespaces(Assembly assembly)
-        {
-            return assembly.GetTypes()
-                .Select(t => t.Namespace)
-                .Where(n => n != null)
-                .Distinct();
-        }
-        
-        private static List<FieldInfo> FilterFieldsByType(Type type, FieldInfo[] fields)
-        {
-            var fieldsOfType = new List<FieldInfo>();
-            foreach (var field in fields)
-            {
-                if (field.FieldType == type)
-                {
-                    fieldsOfType.Add(field);
-                }
-            }
-            return fieldsOfType;
-        }
-
-        private static FieldInfo GetField(string fieldName, Type type, object instance)
-        {
-            var filteredFields = FilterFieldsByType(type, instance.GetType().GetFields(GetBindingFlags()));
-            foreach (var f in filteredFields)
-            {
-                if (f.Name == fieldName)
-                {
-                    return f;
-                }
-            }
-            return null;
-        }
-
-        private static FieldInfo GetField(string fieldName, object instance)
-        {
-            return instance.GetType().GetField(fieldName, GetBindingFlags());
-        }
-
-        private static object GetFieldData(string fieldName, object instance)
-        {
-            return GetField(fieldName, instance)?.GetValue(instance);
-        }
-
-        private static BindingFlags GetBindingFlags()
-        {
-            return BindingFlags.IgnoreCase
-            | BindingFlags.Instance
-            | BindingFlags.NonPublic
-            | BindingFlags.Public
-            | BindingFlags.Static
-            | BindingFlags.FlattenHierarchy;
-        }
-
-        private static void SetFieldData(string fieldName, object instance, object value)
-        {
-            GetField(fieldName, instance)?.SetValue(instance, value);
         }
     }
 }

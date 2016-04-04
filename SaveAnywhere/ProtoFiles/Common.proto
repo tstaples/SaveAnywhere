@@ -10,3 +10,7 @@ message Vector2 {
 message Color {
 	uint32 packedValue = 1;
 }
+
+message ClickableTextureComponent {
+	// Empty
+}

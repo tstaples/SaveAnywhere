@@ -106,7 +106,7 @@ namespace SaveAnywhere
             wasMenuClosedInvoked = false;
             previousMenu = e.PriorMenu;
 
-            if (Utils.IsType<GameMenu>(e.NewMenu) && !isGameMenuOpen)
+            if (TypeUtils.IsType<GameMenu>(e.NewMenu) && !isGameMenuOpen)
             {
                 isGameMenuOpen = true;
             }
@@ -160,7 +160,7 @@ namespace SaveAnywhere
             Log.Debug("Exit tab clicked");
 
             GameMenu gameMenu = (GameMenu)Game1.activeClickableMenu;
-            var pages = Utils.GetNativeField<List<IClickableMenu>, GameMenu>(gameMenu, "pages");
+            var pages = TypeUtils.GetNativeField<List<IClickableMenu>, GameMenu>(gameMenu, "pages");
             ExitPage exitPage = (ExitPage)pages[gameMenu.currentTab];
 
             int x = exitPage.xPositionOnScreen + Game1.tileSize * 3 + Game1.tileSize / 2;

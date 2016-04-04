@@ -59,43 +59,6 @@ namespace SaveAnywhere
             return output;
         }
 
-        public static T GetNativeField<T, Instance>(Instance instance, string fieldName)
-        {
-            FieldInfo fieldInfo = typeof(Instance).GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
-            return (T)fieldInfo.GetValue(instance);
-        }
-
-        public static bool IsType<T>(object o)
-        {
-            if (o != null)
-            {
-                return (o.GetType() == typeof(T));
-            }
-            return false;
-        }
-
-        public static bool IsEnumerableOfType(object o, Type t)
-        {
-            return (IsEnurmerableType(o.GetType()) &&
-                    o.GetType().GetTypeInfo().GenericTypeArguments[0] == t);
-        }
-
-        public static bool IsCollectionOfType(object o, Type t)
-        {
-            return (IsCollectionType(o.GetType()) &&
-                    o.GetType().GetTypeInfo().GenericTypeArguments[0] == t);
-        }
-
-        public static bool IsEnurmerableType(Type type)
-        {
-            return (type.GetInterface("IEnumerable") != null);
-        }
-
-        public static bool IsCollectionType(Type type)
-        {
-            return (type.GetInterface("ICollection") != null);
-        }
-
         public static int GetTileSheetIndexFromID(int id)
         {
             if (id == 0)
