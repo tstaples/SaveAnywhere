@@ -28,20 +28,21 @@ namespace SaveAnywhere.SaveData {
             "ASABKAUSEwoLZGVzY3JpcHRpb24YAiABKAkSDgoGc291cmNlGAMgASgJEg0K",
             "BXRvdGFsGAQgASgFEhIKCnNoZWV0SW5kZXgYBSABKAUSDQoFd2hpY2gYBiAB",
             "KAUSFAoEZ2xvdxgHIAEoCzIGLkNvbG9yEhoKDmJ1ZmZBdHRyaWJ1dGVzGAwg",
-            "AygFQgIQASIkCgxCdWZmc0Rpc3BsYXkSFAoFYnVmZnMYASADKAsyBS5CdWZm",
-            "IpgBCgZGYXJtZXISGgoIcG9zaXRpb24YASABKAsyCC5WZWN0b3IyEiYKD2N1",
-            "cnJlbnRMb2NhdGlvbhgCIAEoCzINLkdhbWVMb2NhdGlvbhIXCg9mYWNpbmdE",
-            "aXJlY3Rpb24YAyABKAUSDwoHc3RhbWluYRgEIAEoAhIOCgZoZWFsdGgYBSAB",
-            "KAUSEAoIc3dpbW1pbmcYBiABKAgiWAoFR2FtZTESEQoJdGltZU9mRGF5GAEg",
-            "ASgFEhcKBnBsYXllchgCIAEoCzIHLkZhcm1lchIjCgxidWZmc0Rpc3BsYXkY",
-            "DyABKAsyDS5CdWZmc0Rpc3BsYXlCGKoCFVNhdmVBbnl3aGVyZS5TYXZlRGF0",
-            "YWIGcHJvdG8z"));
+            "AygFQgIQASJPCgxCdWZmc0Rpc3BsYXkSFAoFYnVmZnMYASADKAsyBS5CdWZm",
+            "EhMKBGZvb2QYAyABKAsyBS5CdWZmEhQKBWRyaW5rGAQgASgLMgUuQnVmZiKY",
+            "AQoGRmFybWVyEhoKCHBvc2l0aW9uGAEgASgLMgguVmVjdG9yMhImCg9jdXJy",
+            "ZW50TG9jYXRpb24YAiABKAsyDS5HYW1lTG9jYXRpb24SFwoPZmFjaW5nRGly",
+            "ZWN0aW9uGAMgASgFEg8KB3N0YW1pbmEYBCABKAISDgoGaGVhbHRoGAUgASgF",
+            "EhAKCHN3aW1taW5nGAYgASgIIlgKBUdhbWUxEhEKCXRpbWVPZkRheRgBIAEo",
+            "BRIXCgZwbGF5ZXIYAiABKAsyBy5GYXJtZXISIwoMYnVmZnNEaXNwbGF5GA8g",
+            "ASgLMg0uQnVmZnNEaXNwbGF5QhiqAhVTYXZlQW55d2hlcmUuU2F2ZURhdGFi",
+            "BnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::SaveAnywhere.SaveData.CommonReflection.Descriptor, },
           new pbr::GeneratedCodeInfo(null, new pbr::GeneratedCodeInfo[] {
             new pbr::GeneratedCodeInfo(typeof(global::SaveAnywhere.SaveData.GameLocation), global::SaveAnywhere.SaveData.GameLocation.Parser, new[]{ "Name" }, null, null, null),
             new pbr::GeneratedCodeInfo(typeof(global::SaveAnywhere.SaveData.Buff), global::SaveAnywhere.SaveData.Buff.Parser, new[]{ "MillisecondsDuration", "Description", "Source", "Total", "SheetIndex", "Which", "Glow", "BuffAttributes" }, null, null, null),
-            new pbr::GeneratedCodeInfo(typeof(global::SaveAnywhere.SaveData.BuffsDisplay), global::SaveAnywhere.SaveData.BuffsDisplay.Parser, new[]{ "Buffs" }, null, null, null),
+            new pbr::GeneratedCodeInfo(typeof(global::SaveAnywhere.SaveData.BuffsDisplay), global::SaveAnywhere.SaveData.BuffsDisplay.Parser, new[]{ "Buffs", "Food", "Drink" }, null, null, null),
             new pbr::GeneratedCodeInfo(typeof(global::SaveAnywhere.SaveData.Farmer), global::SaveAnywhere.SaveData.Farmer.Parser, new[]{ "Position", "CurrentLocation", "FacingDirection", "Stamina", "Health", "Swimming" }, null, null, null),
             new pbr::GeneratedCodeInfo(typeof(global::SaveAnywhere.SaveData.Game1), global::SaveAnywhere.SaveData.Game1.Parser, new[]{ "TimeOfDay", "Player", "BuffsDisplay" }, null, null, null)
           }));
@@ -468,6 +469,8 @@ namespace SaveAnywhere.SaveData {
 
     public BuffsDisplay(BuffsDisplay other) : this() {
       buffs_ = other.buffs_.Clone();
+      Food = other.food_ != null ? other.Food.Clone() : null;
+      Drink = other.drink_ != null ? other.Drink.Clone() : null;
     }
 
     public BuffsDisplay Clone() {
@@ -486,6 +489,29 @@ namespace SaveAnywhere.SaveData {
       get { return buffs_; }
     }
 
+    /// <summary>Field number for the "food" field.</summary>
+    public const int FoodFieldNumber = 3;
+    private global::SaveAnywhere.SaveData.Buff food_;
+    /// <summary>
+    /// repeated Buff otherBuffs = 2;
+    /// </summary>
+    public global::SaveAnywhere.SaveData.Buff Food {
+      get { return food_; }
+      set {
+        food_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "drink" field.</summary>
+    public const int DrinkFieldNumber = 4;
+    private global::SaveAnywhere.SaveData.Buff drink_;
+    public global::SaveAnywhere.SaveData.Buff Drink {
+      get { return drink_; }
+      set {
+        drink_ = value;
+      }
+    }
+
     public override bool Equals(object other) {
       return Equals(other as BuffsDisplay);
     }
@@ -498,12 +524,16 @@ namespace SaveAnywhere.SaveData {
         return true;
       }
       if(!buffs_.Equals(other.buffs_)) return false;
+      if (!object.Equals(Food, other.Food)) return false;
+      if (!object.Equals(Drink, other.Drink)) return false;
       return true;
     }
 
     public override int GetHashCode() {
       int hash = 1;
       hash ^= buffs_.GetHashCode();
+      if (food_ != null) hash ^= Food.GetHashCode();
+      if (drink_ != null) hash ^= Drink.GetHashCode();
       return hash;
     }
 
@@ -513,11 +543,25 @@ namespace SaveAnywhere.SaveData {
 
     public void WriteTo(pb::CodedOutputStream output) {
       buffs_.WriteTo(output, _repeated_buffs_codec);
+      if (food_ != null) {
+        output.WriteRawTag(26);
+        output.WriteMessage(Food);
+      }
+      if (drink_ != null) {
+        output.WriteRawTag(34);
+        output.WriteMessage(Drink);
+      }
     }
 
     public int CalculateSize() {
       int size = 0;
       size += buffs_.CalculateSize(_repeated_buffs_codec);
+      if (food_ != null) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Food);
+      }
+      if (drink_ != null) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Drink);
+      }
       return size;
     }
 
@@ -526,6 +570,18 @@ namespace SaveAnywhere.SaveData {
         return;
       }
       buffs_.Add(other.buffs_);
+      if (other.food_ != null) {
+        if (food_ == null) {
+          food_ = new global::SaveAnywhere.SaveData.Buff();
+        }
+        Food.MergeFrom(other.Food);
+      }
+      if (other.drink_ != null) {
+        if (drink_ == null) {
+          drink_ = new global::SaveAnywhere.SaveData.Buff();
+        }
+        Drink.MergeFrom(other.Drink);
+      }
     }
 
     public void MergeFrom(pb::CodedInputStream input) {
@@ -537,6 +593,20 @@ namespace SaveAnywhere.SaveData {
             break;
           case 10: {
             buffs_.AddEntriesFrom(input, _repeated_buffs_codec);
+            break;
+          }
+          case 26: {
+            if (food_ == null) {
+              food_ = new global::SaveAnywhere.SaveData.Buff();
+            }
+            input.ReadMessage(food_);
+            break;
+          }
+          case 34: {
+            if (drink_ == null) {
+              drink_ = new global::SaveAnywhere.SaveData.Buff();
+            }
+            input.ReadMessage(drink_);
             break;
           }
         }

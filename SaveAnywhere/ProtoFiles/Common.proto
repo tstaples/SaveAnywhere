@@ -14,3 +14,7 @@ message Color {
 message ClickableTextureComponent {
 	// Empty
 }
+
+//message MessageMetaData {
+//	bool setValue = 1;
+//}

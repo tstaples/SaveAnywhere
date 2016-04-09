@@ -118,6 +118,10 @@ namespace SaveAnywhere
             // TODO: find a way to automate this if there are lots of cases
             // Resolve stuff that can't be assigned
             SaveData.Farmer player = game.Player;
+
+            // Temp hack: reset current location before we warp or else it breaks
+            Game1.player.currentLocation.name = "FarmHouse";
+
             Game1.warpFarmer(player.CurrentLocation.Name,
                 (int)(player.Position.X / Game1.tileSize),
                 (int)(player.Position.Y / Game1.tileSize), false);
@@ -129,7 +133,9 @@ namespace SaveAnywhere
             {
                 var buff = new Buff(-1);
                 DePopulateMessage(buffs[i], buff);
-                Game1.buffsDisplay.addOtherBuff(buff);
+
+                if (!Game1.buffsDisplay.hasBuff(buff.which))
+                    Game1.buffsDisplay.addOtherBuff(buff);
             }
         }
 
@@ -207,6 +213,7 @@ namespace SaveAnywhere
         {
             foreach (var field in message.Descriptor.Fields.InDeclarationOrder())
             {
+                // Get the corresponding field from the object we're deserializing into
                 var fieldInfo = TypeUtils.GetField(field.Name, instance);
                 if (fieldInfo == null)
                 {
@@ -214,7 +221,25 @@ namespace SaveAnywhere
                     continue;
                 }
 
+                // Get the stored value for this field
                 object fieldValue = field.Accessor.GetValue(message);
+                if (fieldValue == null)
+                {
+                    Log.Debug("Value for in-field: " + field.Name + " is null. skipping.");
+                    continue;
+                }
+
+                object outValue = fieldInfo.GetValue(instance);
+                if (outValue == null && field.FieldType == FieldType.Message) // we'll need it's fields, so it must be a message
+                {
+                    Log.Debug("Value for member: " + field.Name + " is null. Creating instance...");
+                    outValue = CreateInstance(fieldInfo, (IMessage)fieldValue);
+                    if (outValue == null)
+                        continue;
+
+                    fieldInfo.SetValue(instance, outValue);
+                }
+
 
                 if (field.IsRepeated)
                 {
@@ -222,11 +247,23 @@ namespace SaveAnywhere
 
                     // TODO: maybe supports dicts
                     var genericTypeArgs = TypeUtils.GetGenericArgTypes(fieldInfo.FieldType);
+                    if (genericTypeArgs.Length > 1)
+                    {
+                        Log.Debug("Unsupported number of generic arguments for field: " + field.Name + ". Currently only single argument generic containers such as lists are allowed.");
+                        continue;
+                    }
+
                     Type listType = (genericTypeArgs.Length == 1) ? genericTypeArgs[0] : null;
                     if (listType == null)
                     {
                         Log.Debug("Could not get list type for field: " + field.Name);
                         continue;
+                    }
+
+                    if (outValue == null)
+                    {
+                        outValue = Array.CreateInstance(listType, src.Count);
+                        fieldInfo.SetValue(instance, outValue);
                     }
 
                     //IList dest = (IList)TypeUtils.CreateGenericList(listType);
@@ -239,6 +276,7 @@ namespace SaveAnywhere
                         }
                         else
                         {
+                            // Assign it directly to the element
                             (fieldInfo.GetValue(instance) as IList)[i] = src[i];
                             //dest.Add(src[i]);
                         }
@@ -254,6 +292,54 @@ namespace SaveAnywhere
                     fieldInfo.SetValue(instance, fieldValue);
                 }
             }
+        }
+
+        private object CreateInstance(FieldInfo fieldInfo, IMessage fieldMsg)
+        {
+            object instance = null;
+            // 1. get all the ctors from the object
+            // 2. checks the params of each and see if we have any members that match
+            // 3. if we find a ctor whose params we have all of then create it
+
+            //ConstructorInfo chosenCtor = null;
+            //var ctors = fieldInfo.FieldType.GetConstructors();
+            //List<object> paramValues = new List<object>();
+            //foreach (var ctor in ctors)
+            //{
+            //    if (chosenCtor != null)
+            //        break;
+
+            //    var ctorparams = ctor.GetParameters();
+            //    foreach (var param in ctorparams)
+            //    {
+            //        foreach (var f in fieldMsg.Descriptor.Fields.InDeclarationOrder())
+            //        {
+            //            if (param.Name == f.Name)
+            //            {
+            //                chosenCtor = ctor;
+            //                paramValues.Add(f.Accessor.GetValue(fieldMsg));
+            //                break;
+            //            }
+            //            else
+            //            {
+            //                chosenCtor = null;
+            //                paramValues.Clear();
+            //            }
+            //        }
+            //    }
+            //}
+
+            //if (chosenCtor == null)
+            //{
+            //    Log.Debug("No suitable constructor found for: " + fieldInfo.Name);
+            //}
+
+            //var ctorParams = chosenCtor.GetParameters();
+            //instance = Activator.CreateInstance(fieldInfo.FieldType, paramValues.ToArray());
+
+            instance = FormatterServices.GetUninitializedObject(fieldInfo.FieldType);
+
+            return instance;
         }
 
         private void WriteToSaveFile(IMessage message)

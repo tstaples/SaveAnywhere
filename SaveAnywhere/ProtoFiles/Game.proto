@@ -5,6 +5,7 @@ option csharp_namespace = "SaveAnywhere.SaveData";
 
 message GameLocation {
 	string name = 1; // Name of the location (ie. Town)
+	//MessageMetaData name_meta = 2;
 	// TODO: Events and other needed data
 }
 
@@ -23,6 +24,8 @@ message BuffsDisplay {
 	// This field is actually a dict, so we'll have to do some nasty stuff
 	repeated Buff buffs = 1;
 	//repeated Buff otherBuffs = 2;
+	Buff food = 3;
+	Buff drink = 4;
 }
 
 // Player data
