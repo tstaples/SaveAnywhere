@@ -84,6 +84,7 @@ namespace SaveAnywhere
 
                 Log.Info("[SaveAnywhere] Loading game...");
 
+                PreLoadSetup();
 
                 // Deserialize the game data
                 SaveData.Game1 game;
@@ -113,6 +114,17 @@ namespace SaveAnywhere
             DeleteFile(currentSaveFilePath);
         }
 
+        private void PreLoadSetup()
+        {
+            Game1.player.addedCombatLevel = 0;
+            Game1.player.addedFarmingLevel = 0;
+            Game1.player.addedFishingLevel = 0;
+            Game1.player.addedForagingLevel = 0;
+            Game1.player.addedLuckLevel = 0;
+            Game1.player.addedMiningLevel = 0;
+            Game1.player.addedSpeed = 0;
+        }
+
         private void PostLoadFixup(SaveData.Game1 game)
         {
             // TODO: find a way to automate this if there are lots of cases
@@ -127,6 +139,17 @@ namespace SaveAnywhere
                 (int)(player.Position.Y / Game1.tileSize), false);
             Game1.player.faceDirection(player.FacingDirection);
 
+            // Re-add food and drink buffs since their affects wouldn't have been applied
+            // when they were set directly.
+            // TODO: set food and drink fields to 'don't set' in meta.
+            Buff foodBuff = Game1.buffsDisplay.food;
+            Buff drinkBuff = Game1.buffsDisplay.drink;
+            Game1.buffsDisplay.clearAllBuffs();
+            if (foodBuff != null)
+                Game1.buffsDisplay.tryToAddFoodBuff(foodBuff, foodBuff.millisecondsDuration);
+            if (drinkBuff != null)
+                Game1.buffsDisplay.tryToAddDrinkBuff(drinkBuff);
+
             var buffs = game.BuffsDisplay.Buffs;
             Game1.buffsDisplay.otherBuffs = new List<Buff>();
             for (int i = 0; i < buffs.Count; ++i)
@@ -134,15 +157,19 @@ namespace SaveAnywhere
                 var buff = new Buff(-1);
                 DePopulateMessage(buffs[i], buff);
 
-                if (!Game1.buffsDisplay.hasBuff(buff.which))
+                if (!Game1.buffsDisplay.hasBuff(buff.which) &&
+                    (Game1.buffsDisplay.food == null || Game1.buffsDisplay.food?.which != buff.which) &&
+                    (Game1.buffsDisplay.drink == null || Game1.buffsDisplay.drink?.which != buff.which))
+                {
                     Game1.buffsDisplay.addOtherBuff(buff);
+                }
             }
         }
 
         private IMessage PostSaveFixup(SaveData.Game1 game)
         {
             var buffsDict = (Dictionary<ClickableTextureComponent, Buff>)TypeUtils.GetPrivateFieldData("buffs", Game1.buffsDisplay);
-            var buffs = buffsDict.Values.ToList().Concat(Game1.buffsDisplay.otherBuffs);
+            var buffs = buffsDict.Values.ToList().Concat(Game1.buffsDisplay.otherBuffs).Distinct();
             foreach (var buff in buffs)
             {
                 game.BuffsDisplay.Buffs.Add((SaveData.Buff)PopulateMessage(SaveData.Buff.Descriptor, buff));
