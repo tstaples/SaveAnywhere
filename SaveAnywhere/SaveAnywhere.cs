@@ -42,7 +42,7 @@ namespace SaveAnywhere
 
         private SaveManager saveManager;
 
-        public override void Entry(params object[] objects)
+        public override void Entry(IModHelper helper)
         {
             MenuEvents.MenuChanged += OnMenuChanged;
             GameEvents.UpdateTick += OnUpdateTick;
@@ -56,12 +56,12 @@ namespace SaveAnywhere
         {
             if (e.KeyPressed == Keys.K)
             {
-                Log.Debug("loading");
+                this.Monitor.Log("loading");
                 saveManager.Load();
             }
             else if (e.KeyPressed == Keys.J)
             {
-                Log.Debug("saving");
+                this.Monitor.Log("saving");
                 saveManager.Save();
             }
             else if (e.KeyPressed == Keys.N)
@@ -79,10 +79,10 @@ namespace SaveAnywhere
         {
             if (Game1.hasLoadedGame && Game1.gameMode == 3)
             {
-                Log.Debug("Game loaded... running custom loader");
+                this.Monitor.Log("Game loaded... running custom loader");
                 GameEvents.UpdateTick -= PollForGameLoaded;
 
-                saveManager = new SaveManager();
+                saveManager = new SaveManager(this.Monitor);
                 saveManager.Load();
             }
         }
@@ -112,6 +112,7 @@ namespace SaveAnywhere
             }
         }
 
+        // TODO: change to menu closed event
         private void OnClickableMenuClosed(IClickableMenu priorMenu)
         {
             isGameMenuOpen = false;
@@ -157,7 +158,7 @@ namespace SaveAnywhere
 
         private void OnExitPageOpened()
         {
-            Log.Debug("Exit tab clicked");
+            this.Monitor.Log("Exit tab clicked");
 
             GameMenu gameMenu = (GameMenu)Game1.activeClickableMenu;
             var pages = TypeUtils.GetNativeField<List<IClickableMenu>, GameMenu>(gameMenu, "pages");
@@ -194,23 +195,13 @@ namespace SaveAnywhere
         private void UnsubscribeEvents()
         {
             ControlEvents.MouseChanged -= OnMouseChanged;
-
-#if SMAPI_VERSION_39_3_AND_PRIOR
-            GraphicsEvents.DrawTick -= OnDraw;
-#else
             GraphicsEvents.OnPostRenderEvent -= OnDraw;
-#endif
         }
 
         private void SubscribeEvents()
         {
             ControlEvents.MouseChanged += OnMouseChanged;
-
-#if SMAPI_VERSION_39_3_AND_PRIOR
-            GraphicsEvents.DrawTick += OnDraw;
-#else
             GraphicsEvents.OnPostRenderEvent += OnDraw;
-#endif
         }
 
         // Debug

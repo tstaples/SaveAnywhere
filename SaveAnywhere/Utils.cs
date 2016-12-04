@@ -9,16 +9,6 @@ namespace SaveAnywhere
 {
     public class Utils
     {
-        public static void DebugLog(string message)
-        {
-#if DEBUG && SMAPI_VERSION_39_3_AND_PRIOR
-            // Log.Debug doesn't work in 39.2 since defining DEBUG breaks stuff...
-            Log.Info(message);
-#elif DEBUG
-            Log.Debug(message);
-#endif
-        }
-
         public static string ArrayToString<T>(T[] array)
         {
             string s = "";
@@ -50,9 +40,8 @@ namespace SaveAnywhere
                 {
                     output[i] = Int32.Parse(array[i]);
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    Utils.DebugLog("[CalendarBirthdayGiftHelper] failed to convert " + array[i] + "to int32: " + ex);
                     output[i] = defaultVal;
                 }
             }

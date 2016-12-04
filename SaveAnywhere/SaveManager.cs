@@ -27,8 +27,12 @@ namespace SaveAnywhere
         private string currentSaveFileDir;
         private string currentSaveFilePath;
 
-        public SaveManager()
+        private IMonitor monitor;
+
+        public SaveManager(IMonitor monitor)
         {
+            this.monitor = monitor;
+
             currentSaveFileName = Game1.player.name + "_" + Game1.uniqueIDForThisGame;
             currentSaveFileDir = Path.Combine(rootSavePath, currentSaveFileName);
             currentSaveFilePath = Path.Combine(currentSaveFileDir, currentSaveFileName);
@@ -38,7 +42,7 @@ namespace SaveAnywhere
         // and maybe store up to 5 backups or something
         public void Save()
         {
-            Log.Info("[SaveAnywhere] Saving game...");
+            monitor.Log("Saving game...");
 
             // Run the regular game save
             IEnumerator<int> saveEnumerator = SaveGame.Save();
@@ -46,7 +50,7 @@ namespace SaveAnywhere
             {
                 if (saveEnumerator.Current == SaveCompleteFlag)
                 {
-                    Log.Debug("Regular game save finished saving");
+                    monitor.Log("Regular game save finished saving");
                 }
             }
 
@@ -63,11 +67,11 @@ namespace SaveAnywhere
                 WriteToSaveFile(message);
 
                 // TODO: create events for this so we can display the text on the screen
-                Log.Info("[SaveAnywhere] Save complete!");
+                monitor.Log("Save complete!");
             }
             catch (Exception ex)
             {
-                Log.Error("[SaveAnywhere] Error saving data: " + ex);
+                monitor.Log($"Error saving data: {ex}", LogLevel.Error);
             }
         }
 
@@ -78,11 +82,11 @@ namespace SaveAnywhere
                 // Load normally if we don't find one of our save files
                 if (!File.Exists(currentSaveFilePath))
                 {
-                    Log.Info("[SaveAnywhere] No custom save file found; loading normally.");
+                    monitor.Log("No custom save file found; loading normally.");
                     return;
                 }
 
-                Log.Info("[SaveAnywhere] Loading game...");
+                monitor.Log("Loading game...");
 
                 PreLoadSetup();
 
@@ -99,11 +103,11 @@ namespace SaveAnywhere
                 // Do any manual adjustments like warping the player
                 PostLoadFixup(game);
 
-                Log.Info("[SaveAnywhere] Load complete!");
+                monitor.Log("Load complete!");
             }
             catch (Exception e)
             {
-                Log.Error("[SaveAnywhere] Failed to load data: " + e);
+                monitor.Log($"Failed to load data: {e}", LogLevel.Error);
             }
         }
 
@@ -116,6 +120,7 @@ namespace SaveAnywhere
 
         private void PreLoadSetup()
         {
+            // Reset all the stats so they don't over-accumulate
             Game1.player.addedCombatLevel = 0;
             Game1.player.addedFarmingLevel = 0;
             Game1.player.addedFishingLevel = 0;
@@ -189,7 +194,7 @@ namespace SaveAnywhere
                 object value = EnsureField(field.Name, instance);
                 if (value == null)
                 {
-                    Log.Debug("Value for field: " + field.Name + " is null; Leaving as default.");
+                    monitor.Log($"Value for field: {field.Name} is null; Leaving as default.");
                     continue;
                 }
 
@@ -244,7 +249,7 @@ namespace SaveAnywhere
                 var fieldInfo = TypeUtils.GetField(field.Name, instance);
                 if (fieldInfo == null)
                 {
-                    Log.Debug("Could not find field info for: " + field.Name + "; skipping.");
+                    monitor.Log($"Could not find field info for: {field.Name}; skipping.");
                     continue;
                 }
 
@@ -252,14 +257,14 @@ namespace SaveAnywhere
                 object fieldValue = field.Accessor.GetValue(message);
                 if (fieldValue == null)
                 {
-                    Log.Debug("Value for in-field: " + field.Name + " is null. skipping.");
+                    monitor.Log($"Value for in-field: {field.Name} is null. skipping.");
                     continue;
                 }
 
                 object outValue = fieldInfo.GetValue(instance);
                 if (outValue == null && field.FieldType == FieldType.Message) // we'll need it's fields, so it must be a message
                 {
-                    Log.Debug("Value for member: " + field.Name + " is null. Creating instance...");
+                    monitor.Log("Value for member: {field.Name} is null. Creating instance...");
                     outValue = CreateInstance(fieldInfo, (IMessage)fieldValue);
                     if (outValue == null)
                         continue;
@@ -276,14 +281,14 @@ namespace SaveAnywhere
                     var genericTypeArgs = TypeUtils.GetGenericArgTypes(fieldInfo.FieldType);
                     if (genericTypeArgs.Length > 1)
                     {
-                        Log.Debug("Unsupported number of generic arguments for field: " + field.Name + ". Currently only single argument generic containers such as lists are allowed.");
+                        monitor.Log($"Unsupported number of generic arguments for field: {field.Name} Currently only single argument generic containers such as lists are allowed.");
                         continue;
                     }
 
                     Type listType = (genericTypeArgs.Length == 1) ? genericTypeArgs[0] : null;
                     if (listType == null)
                     {
-                        Log.Debug("Could not get list type for field: " + field.Name);
+                        monitor.Log("Could not get list type for field: {field.Name}");
                         continue;
                     }
 
@@ -358,7 +363,7 @@ namespace SaveAnywhere
 
             //if (chosenCtor == null)
             //{
-            //    Log.Debug("No suitable constructor found for: " + fieldInfo.Name);
+            //    monitor.Log("No suitable constructor found for: " + fieldInfo.Name);
             //}
 
             //var ctorParams = chosenCtor.GetParameters();
@@ -382,7 +387,7 @@ namespace SaveAnywhere
             }
             catch (Exception e)
             {
-                Log.Error("[SaveAnywhere] Failed to write to temp save file: " + e);
+                monitor.Log($"Failed to write to temp save file: {e}", LogLevel.Error);
                 return;
             }
 
@@ -396,7 +401,7 @@ namespace SaveAnywhere
             }
             catch (Exception e)
             {
-                Log.Error("[SaveAnywhere] Failed to rename " + tempSavePath + " to: " + currentSaveFilePath + ":\n" + e);
+                monitor.Log($"Failed to rename {tempSavePath} to {currentSaveFilePath}:\n {e}");
             }
         }
         
@@ -404,14 +409,14 @@ namespace SaveAnywhere
         {
             if (File.Exists(path))
             {
-                Log.Debug("Deleting: " + path);
                 try
                 {
                     File.Delete(path);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
-                    Log.Error("[SaveAnywhere] Error deleting file: " + path + ".\n" + e);
+                    // TODO: handle exception from caller and log there
+                    //Log.Error("[SaveAnywhere] Error deleting file: " + path + ".\n" + e);
                 }
             }
         }
@@ -448,7 +453,7 @@ namespace SaveAnywhere
             var fieldInfo = TypeUtils.GetField(fieldName, instance);
             if (fieldInfo == null)
             {
-                Log.Debug("Could not find value for: " + fieldName);
+                //monitor.Log("Could not find value for: " + fieldName);
                 return null;
             }
             return fieldInfo.GetValue(instance);
