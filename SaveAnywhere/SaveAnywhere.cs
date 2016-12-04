@@ -37,14 +37,15 @@ namespace SaveAnywhere
         private bool isExitPageOpen = false;
         private Rectangle saveButtonBounds;
 
-        private IClickableMenu previousMenu = null;
-        private bool wasMenuClosedInvoked = false;
-
+        private IModHelper helper;
         private SaveManager saveManager;
 
         public override void Entry(IModHelper helper)
         {
+            this.helper = helper;
+
             MenuEvents.MenuChanged += OnMenuChanged;
+            MenuEvents.MenuClosed += OnMenuClosed;
             GameEvents.UpdateTick += OnUpdateTick;
             GameEvents.UpdateTick += PollForGameLoaded;
             ControlEvents.KeyReleased += ControlEvents_KeyReleased;
@@ -82,7 +83,7 @@ namespace SaveAnywhere
                 this.Monitor.Log("Game loaded... running custom loader");
                 GameEvents.UpdateTick -= PollForGameLoaded;
 
-                saveManager = new SaveManager(this.Monitor);
+                saveManager = new SaveManager(this.helper,  this.Monitor);
                 saveManager.Load();
             }
         }
@@ -102,18 +103,13 @@ namespace SaveAnywhere
 
         private void OnMenuChanged(object sender, EventArgsClickableMenuChanged e)
         {
-            // Reset flag
-            wasMenuClosedInvoked = false;
-            previousMenu = e.PriorMenu;
-
             if (TypeUtils.IsType<GameMenu>(e.NewMenu) && !isGameMenuOpen)
             {
                 isGameMenuOpen = true;
             }
         }
 
-        // TODO: change to menu closed event
-        private void OnClickableMenuClosed(IClickableMenu priorMenu)
+        private void OnMenuClosed(object sender, EventArgsClickableMenuClosed e)
         {
             isGameMenuOpen = false;
             isExitPageOpen = false;
@@ -123,14 +119,7 @@ namespace SaveAnywhere
 
         private void OnUpdateTick(object sender, EventArgs e)
         {
-            // Check for menu closed events
-            if (!wasMenuClosedInvoked && previousMenu != null && Game1.activeClickableMenu == null)
-            {
-                wasMenuClosedInvoked = true;
-                OnClickableMenuClosed(previousMenu);
-            }
-
-            if (isGameMenuOpen)
+            if (isGameMenuOpen && Game1.activeClickableMenu != null && Game1.activeClickableMenu is GameMenu)
             {
                 GameMenu gameMenu = (GameMenu)Game1.activeClickableMenu;
                 GameMenuTab currentTab = (GameMenuTab)gameMenu.currentTab;
