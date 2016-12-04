@@ -4,6 +4,8 @@ using System.Reflection;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using StardewModdingAPI;
+using Newtonsoft.Json;
+using System.IO;
 
 namespace SaveAnywhere
 {
@@ -71,6 +73,69 @@ namespace SaveAnywhere
                 throw new ArgumentNullException(name);
             }
             return value;
+        }
+
+        /// <summary>Save to a JSON file.</summary>
+        /// <typeparam name="TModel">The model type.</typeparam>
+        /// <param name="path">The file path relative to the mod directory.</param>
+        /// <param name="model">The model to save.</param>
+        public static void WriteJsonFile<TModel>(string path, TModel model)
+            where TModel : class
+        {
+            // create directory if needed
+            string dir = Path.GetDirectoryName(path);
+            if (!Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
+
+            // write file
+            JsonSerializerSettings settings = new JsonSerializerSettings()
+            {
+                PreserveReferencesHandling = PreserveReferencesHandling.Objects,
+                ReferenceLoopHandling = ReferenceLoopHandling.Serialize
+            };
+
+            string json = JsonConvert.SerializeObject(model, Formatting.Indented, settings);
+            File.WriteAllText(path, json);
+        }
+
+        /// <summary>Read a JSON file.</summary>
+        /// <typeparam name="TModel">The model type.</typeparam>
+        /// <param name="path">The file path relative to the mod directory.</param>
+        /// <returns>Returns the deserialised model, or <c>null</c> if the file doesn't exist or is empty.</returns>
+        public static TModel ReadJsonFile<TModel>(string path)
+            where TModel : class
+        {
+            // read file
+            string json;
+            try
+            {
+                json = File.ReadAllText(path);
+            }
+            catch (FileNotFoundException)
+            {
+                return null;
+            }
+
+            JsonSerializerSettings settings = new JsonSerializerSettings()
+            {
+                PreserveReferencesHandling = PreserveReferencesHandling.Objects,
+                ReferenceLoopHandling = ReferenceLoopHandling.Serialize
+            };
+
+            // TODO: find a way to handle deserializing the lists.
+            // Otherwise we might just have to wrap errthang D:
+            // deserialise model
+            TModel model = JsonConvert.DeserializeObject<TModel>(json, settings);
+
+            return model;
+        }
+
+        public static void DeleteFile(string path)
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
         }
     }
 }
