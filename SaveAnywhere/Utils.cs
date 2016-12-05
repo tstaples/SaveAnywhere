@@ -94,7 +94,7 @@ namespace SaveAnywhere
                 ReferenceLoopHandling = ReferenceLoopHandling.Serialize
             };
 
-            string json = JsonConvert.SerializeObject(model, Formatting.Indented, settings);
+            string json = JsonConvert.SerializeObject(model, Formatting.Indented/*, settings*/);
             File.WriteAllText(path, json);
         }
 

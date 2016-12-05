@@ -37,6 +37,16 @@ namespace SaveAnywhere
             return Activator.CreateInstance(typeof(List<>).MakeGenericType(listType));
         }
 
+        public static bool HasCustomAttribute<TAttribute>(PropertyInfo property)
+        {
+            return (property?.GetCustomAttribute(typeof(TAttribute)) != null);
+        }
+
+        public static bool HasCustomAttribute<TAttribute>(Type type)
+        {
+            return (type?.GetCustomAttribute(typeof(TAttribute)) != null);
+        }
+
         public static bool IsType<T>(object o)
         {
             if (o != null)

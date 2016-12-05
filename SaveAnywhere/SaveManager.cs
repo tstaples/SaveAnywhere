@@ -13,7 +13,7 @@ using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
 using Newtonsoft.Json;
-
+using System.Diagnostics;
 
 namespace SaveAnywhere
 {
@@ -29,6 +29,8 @@ namespace SaveAnywhere
 
         private IModHelper modHelper;
         private IMonitor monitor;
+
+        private delegate void SerializationMethod(object o, object data);
 
         public SaveManager(IModHelper modHelper, IMonitor monitor)
         {
@@ -151,16 +153,60 @@ namespace SaveAnywhere
 
         private void SerializeObject(object o, SaveData.BaseData data)
         {
+            if (o == null)
+            {
+                return;
+            }
+
             foreach (var field in data.GetType().GetProperties())
             {
                 var nativeField = TypeUtils.GetField(field.Name, o);
+                if (nativeField?.GetValue(o) == null)
+                {
+                    field.SetValue(data, null);
+                    continue;
+                }
 
                 // Recursively follow base data types until we come to a native type
-                if (field.PropertyType?.GetCustomAttribute(typeof(SaveData.NativeClassDataWrapperAttribute)) != null)
+                if (TypeUtils.HasCustomAttribute<SaveData.NativeClassDataAttribute>(field.PropertyType))
                 {
                     var nativeObject = nativeField?.GetValue(o);
-                    monitor.Log($"{field.Name} is a native data wrapper, doing deeping");
+                    monitor.Log($"{field.Name} is a native data wrapper, going deeping");
                     SerializeObject(nativeObject, (SaveData.BaseData)field.GetValue(data));
+                }
+                else if (TypeUtils.HasCustomAttribute<SaveData.NativePropertyDataAttribute>(field))
+                {
+                    monitor.Log($"{field.Name} has a NativePropertyDataAttribute");
+
+                    var attribute = field.GetCustomAttribute<SaveData.NativePropertyDataAttribute>();
+                    if (attribute.IsCollection)
+                    {
+                        // Handle complex collection serialization (aka converting types to wrapper types etc.)
+                        var wrapperCollection = field.GetValue(data) as ICollection;
+                        var nativeCollection = nativeField.GetValue(o) as ICollection;
+
+                        ICollection serializeCollection = wrapperCollection;
+                        if (nativeCollection is IDictionary)
+                        {
+                            SerializeDictionary((IDictionary)nativeCollection, (IDictionary)wrapperCollection, (IDictionary)serializeCollection, (a, b) =>
+                            {
+                                SerializeObject(a, b as SaveData.BaseData);
+                            });
+                        }
+                        else if (nativeCollection is IList)
+                        {
+                            SerializeNativeCollectionToWrapper(nativeCollection, wrapperCollection, (IList)serializeCollection, (a, b) =>
+                            {
+                                SerializeObject(a, b as SaveData.BaseData);
+                            });
+                        }
+                        else
+                        {
+                            monitor.Log("Collection type not supported", LogLevel.Warn);
+                        }
+
+                        field.SetValue(data, serializeCollection);
+                    }
                 }
                 else
                 {
@@ -185,22 +231,63 @@ namespace SaveAnywhere
 
         private void DeserializeObject(object o, SaveData.BaseData data)
         {
+            if (o == null)
+                return;
+
             foreach (var field in data.GetType().GetProperties())
             {
+                if (field.GetValue(data) == null)
+                    continue;
+
                 var nativeField = TypeUtils.GetField(field.Name, o);
 
                 // Recursively follow base data types until we come to a native type
-                if (field.PropertyType?.GetCustomAttribute(typeof(SaveData.NativeClassDataWrapperAttribute)) != null)
+                if (TypeUtils.HasCustomAttribute<SaveData.NativeClassDataAttribute>(field.PropertyType))
                 {
                     var nativeObject = nativeField?.GetValue(o);
-                    if (nativeObject != null)
+                    if (nativeObject == null)
                     {
-                        monitor.Log($"{field.Name} is a native data wrapper, doing deeping");
-                        DeserializeObject(nativeObject, (SaveData.BaseData)field.GetValue(data));
+                        monitor.Log($"Native object for {field.Name} is null; creating instance.");
+                        nativeObject = FormatterServices.GetUninitializedObject(nativeField.FieldType);
                     }
-                    else
+
+                    monitor.Log($"{field.Name} is a native data wrapper, going deeper");
+                    DeserializeObject(nativeObject, (SaveData.BaseData)field.GetValue(data));
+                    nativeField.SetValue(o, nativeObject);
+                }
+                else if (TypeUtils.HasCustomAttribute<SaveData.NativePropertyDataAttribute>(field))
+                {
+                    monitor.Log($"{field.Name} has a NativePropertyDataAttribute");
+
+                    var attribute = field.GetCustomAttribute<SaveData.NativePropertyDataAttribute>();
+                    if (attribute.IsCollection)
                     {
-                        monitor.Log($"Native object for {field.Name} is null. Probably need to create the instance");
+                        // Handle complex collection serialization (aka converting types to wrapper types etc.)
+                        var wrapperCollection = field.GetValue(data) as ICollection;
+                        var nativeCollection = nativeField.GetValue(o) as ICollection;
+
+                        ICollection serializeCollection = nativeCollection;
+                        if (nativeCollection is IDictionary)
+                        {
+                            //serializeCollection = SerializeDictionary((IDictionary)nativeCollection, (IDictionary)wrapperCollection, DeserializeObject);
+                            SerializeDictionary((IDictionary)wrapperCollection, (IDictionary)nativeCollection, (IDictionary)serializeCollection, (a, b) =>
+                            {
+                                DeserializeObject(b, a as SaveData.BaseData);
+                            });
+                        }
+                        else if (nativeCollection is IList)
+                        {
+                            SerializeNativeCollectionToWrapper(wrapperCollection, nativeCollection, (IList)serializeCollection, (a, b) =>
+                            {
+                                DeserializeObject(b, a as SaveData.BaseData);
+                            });
+                        }
+                        else
+                        {
+                            monitor.Log("Collection type not supported", LogLevel.Warn);
+                        }
+
+                        nativeField.SetValue(o, serializeCollection);
                     }
                 }
                 else
@@ -219,6 +306,53 @@ namespace SaveAnywhere
             }
         }
 
+        // Convert from native to wrapper
+        private void SerializeDictionary(IDictionary native, IDictionary wrapper, IDictionary outDict, SerializationMethod serialMethod)
+        {
+            Debug.Assert(native != null && wrapper != null);
+
+            Type wrapperKeyType = wrapper.GetType().GetGenericArguments()[0];
+            Type wrapperValueType = wrapper.GetType().GetGenericArguments()[1];
+
+            foreach (DictionaryEntry entry in native)
+            {
+                object wrapperKey = entry.Key;
+                object wrapperValue = entry.Value;
+
+                if (entry.Key.GetType() != wrapperKeyType)
+                {
+                    wrapperKey = Activator.CreateInstance(wrapperKeyType);
+                    serialMethod(entry.Key, wrapperKey);
+                }
+                if (entry.Value.GetType() != wrapperValueType)
+                {
+                    wrapperValue = Activator.CreateInstance(wrapperValueType);
+                    serialMethod(entry.Value, wrapperValue);
+                }
+                outDict.Add(wrapperKey, wrapperValue);
+            }
+        }
+
+        //TODO: fix naming to be more generic from one collection to another as we use it both ways
+        private void SerializeNativeCollectionToWrapper(ICollection native, ICollection wrapper, IList outCollection, SerializationMethod serialMethod)
+        {
+            // If they're the same type then just use the native one
+            Type nativeType = native.GetType().GetGenericArguments()[0];
+            Type wrapperType = wrapper.GetType().GetGenericArguments()[0];
+
+            foreach (var item in native)
+            {
+                var wrapperItem = item;
+                if (nativeType != wrapperType)
+                {
+                    //wrapperItem = Activator.CreateInstance(wrapperType);
+                    wrapperItem = FormatterServices.GetUninitializedObject(wrapperType);
+                    serialMethod(item, wrapperItem);
+                }
+                outCollection.Add(wrapperItem);
+            }
+        }
+
         private void PostLoadFixup(SaveData.GameData gameData)
         {
             // TODO: find a way to automate this if there are lots of cases
@@ -233,43 +367,9 @@ namespace SaveAnywhere
                 (int)(player.position.Y / Game1.tileSize), false);
             Game1.player.faceDirection(player.facingDirection);
 
-            // Re-add food and drink buffs since their affects wouldn't have been applied
-            // when they were set directly.
-            // TODO: set food and drink fields to 'don't set' in meta.
-            //Buff foodBuff = Game1.buffsDisplay.food;
-            //Buff drinkBuff = Game1.buffsDisplay.drink;
-            //Game1.buffsDisplay.clearAllBuffs();
-            //if (foodBuff != null)
-            //    Game1.buffsDisplay.tryToAddFoodBuff(foodBuff, foodBuff.millisecondsDuration);
-            //if (drinkBuff != null)
-            //    Game1.buffsDisplay.tryToAddDrinkBuff(drinkBuff);
-
-            //var buffs = game.BuffsDisplay.Buffs;
-            //Game1.buffsDisplay.otherBuffs = new List<Buff>();
-            //for (int i = 0; i < buffs.Count; ++i)
-            //{
-            //    var buff = new Buff(-1);
-            //    DePopulateMessage(buffs[i], buff);
-
-            //    if (!Game1.buffsDisplay.hasBuff(buff.which) &&
-            //        (Game1.buffsDisplay.food == null || Game1.buffsDisplay.food?.which != buff.which) &&
-            //        (Game1.buffsDisplay.drink == null || Game1.buffsDisplay.drink?.which != buff.which))
-            //    {
-            //        Game1.buffsDisplay.addOtherBuff(buff);
-            //    }
-            //}
+            // Force it to re-evaluate the buffs it has and display the correct icons
+            Game1.buffsDisplay.syncIcons();
         }
-
-        //private IMessage PostSaveFixup(SaveData.Game1 game)
-        //{
-        //    var buffsDict = (Dictionary<ClickableTextureComponent, Buff>)TypeUtils.GetPrivateFieldData("buffs", Game1.buffsDisplay);
-        //    var buffs = buffsDict.Values.ToList().Concat(Game1.buffsDisplay.otherBuffs).Distinct();
-        //    foreach (var buff in buffs)
-        //    {
-        //        game.BuffsDisplay.Buffs.Add((SaveData.Buff)PopulateMessage(SaveData.Buff.Descriptor, buff));
-        //    }
-        //    return game;
-        //}
 
         private void WriteToSaveFile(SaveData.GameData gameData)
         {
